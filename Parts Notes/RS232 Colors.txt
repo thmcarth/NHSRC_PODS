@@ -1,0 +1,10 @@
+Pinout for the RS232 connector thats cut up:
+1. N/A
+2. Red (RXD)
+3. Orange (TXD)
+4. Yellow (DTR)
+5. Green (GND)
+6. N/A
+7. N/A
+8. N/A
+9. N/A
