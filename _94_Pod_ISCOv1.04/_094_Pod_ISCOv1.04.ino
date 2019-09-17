@@ -24,7 +24,8 @@
 //             - Grab sample ignores water level. Still depends on ISCO being enabled
 //Version 1.02 - Change auto sampling interval via text message
 //Version 1.03 - Saving sampling mode and interval to EEPROM to hold on restart - 4/25/2018 - Tim McArthur
-//             - Writing more information to SD card
+//             - Writing more information to SD card\
+//Version 1.04 - Daylight Savings time, confirm Google number as main number.
 
 
 
