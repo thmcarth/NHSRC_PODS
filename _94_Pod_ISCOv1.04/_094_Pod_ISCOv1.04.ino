@@ -32,7 +32,7 @@
 
 char GPS[] = "40.5087450, -74.3580650 0"; //needs a (space 0) at the end, example ="35.068471,-89.944730 0"
 int unit = 6;
-char versionNum[] = "_094_Pod_ISCOv1.03";
+char versionNum[] = "_094_Pod_ISCOv1.04";
 
 //////////////////////////////////
 
