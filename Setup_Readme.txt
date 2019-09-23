@@ -18,3 +18,10 @@ Instructions for Installing and running the ISCO_pod_sampler code for the first 
 - It will ask you to make a folder, just click OK
 - Click Sketch--> Include Library--> add ZIP Library--> select Ubidots_FONATim.zip  (Repeat steps for Timezone.zip)
 6. Click Verify (Check Mark) and see if there are any errors.
+******
+Likely Errors and solutions
+******
+1. Multiple libraries were found for "TimeLib.h" compilation terminated.
+- Likely solution, Go to Documents-->Arduino-->Libraries and delete TimeLib.h 
+- Don't delete the Timelib.h inside of the library dedicated to the Teensy, or else the Teensy won't have its time library.
+
