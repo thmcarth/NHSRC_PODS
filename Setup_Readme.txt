@@ -17,3 +17,4 @@ Instructions for Installing and running the ISCO_pod_sampler code for the first 
 - Open most recent Sketch 1.03 or 1.04 of Pod_ISCO code example: (C:\Users\Amikelon\Desktop\NHSRC_PODS-master\NHSRC_PODS-master\_94_Pod_ISCOv1.04)
 - It will ask you to make a folder, just click OK
 - Click Sketch--> Include Library--> add ZIP Library--> select Ubidots_FONATim.zip  (Repeat steps for Timezone.zip)
+6. Click Verify (Check Mark) and see if there are any errors.
