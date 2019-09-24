@@ -1,5 +1,5 @@
 # 094_ISCO
 094 ISCO Arduino code 
 
-**ISCO SUPPORT PHONE Number**
+**ISCO SUPPORT PHONE NUMBER**
 ***866-298-6174***
