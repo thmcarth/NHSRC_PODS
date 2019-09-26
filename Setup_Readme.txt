@@ -4,8 +4,8 @@
 Instructions for Installing and running the ISCO_pod_sampler code for the first time
 **********************
 
-1.Download arduino installer-->https://www.arduino.cc/en/Main/Donate
-2.Download Teensyduino that matches your version of Arduino (most likely 1.8.x where x is a number) 
+1.Download and install Arduino-->https://www.arduino.cc/en/Main/Donate
+2.Download and install Teensyduino that matches your version of Arduino (most likely 1.8.x where x is a number) 
 (Note: This link is for 1.8.10 beta--> https://forum.pjrc.com/threads/57609-Teensyduino-1-48-Beta-1)
 --This link is for the main site download-->https://www.pjrc.com/teensy/td_download.html
 3.Clone or download Github NHSRC_PODS repository as ZIP
@@ -24,4 +24,4 @@ Likely Errors and solutions
 ******
 1. Multiple libraries were found for "TimeLib.h" compilation terminated.
 - Likely solution, need to make sure you install using Sketch--> include Library--> Manage Library to install FONA Libraries
-
+2. Ensure that the Arduino IDE is closed when installing Teensyduino
