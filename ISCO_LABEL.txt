@@ -1,6 +1,6 @@
-ISCO NUMBER 1, S/N: 198K00238, Functional Serial Port (GOOD)
-ISCO NUMBER 2, S/N: 198K00237, Functional Serial Port (GOOD)
-ISCO NUMBER 3, S/N: 198K00241, Functional Serial Port (GOOD)
-ISCO NUMBER 4, S/N: 219J00126, Functional Serial Port (GOOD) (NEW)
-ISCO NUMBER 5, S/N: 219J00123, Functional Serial Port (GOOD) (NEW)
-ISCO NUMBER 6, S/N: 198K00234, ? Serial ?
+ISCO NUMBER 1, S/N: 198K00238, Functional Serial Port (GOOD) 6700
+ISCO NUMBER 2, S/N: 198K00237, Functional Serial Port (GOOD) 6700
+ISCO NUMBER 3, S/N: 198K00241, Functional Serial Port (GOOD) 6700
+ISCO NUMBER 4, S/N: 219J00126, Functional Serial Port (GOOD) 6712
+ISCO NUMBER 5, S/N: 219J00123, Functional Serial Port (GOOD) 6712
+ISCO NUMBER 6, S/N: 198K00234, Functional Serial Port (GOOD) 6700
