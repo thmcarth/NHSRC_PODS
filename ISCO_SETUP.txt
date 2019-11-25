@@ -1,0 +1,10 @@
+Author: Hawes Collier
+~~~
+1. You will need an RS232 Cable with 3 leads that can plug into Receive, Transfer, and Ground onto the ISCO.
+2. Make sure that when plugging in your leads, you plug the Transfer male lead into the ISCO's Receive female header and the Receive male lead into the ISCO's Female Transfer header.
+3. To test and verify ISCO works, you will want to install terminal communication sofwtware on your PC.  
+I used Termite, but I had issues until I installed Teraterm.  
+4. Once plugging in your leads and installing your terminal software, send the ? character to the terminal 
+port that your ISCO device has connected on.  If you get a message back and hear beeping on the ISCO, then the serial port is working.
+***to be continued
+~~
