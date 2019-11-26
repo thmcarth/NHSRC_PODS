@@ -24,9 +24,11 @@ int Debounce = 10;  //The minimum length of pulse which will be counted be the d
 
 int start_time = 0; //start time of intensity measurement
 int current_time = 0; //time during intensity measurement
-int Time_passed  = 0;// One second has passed... //Ichibio Keika
+int Time_passed  = 0;// One second has passed... Ichibio Ke ka
 int Intensity_Period = 30000; //30 (30000 ms) second interval for measuring intensity
 double Intensity_value = 0;
+
+static int begin = 0;
 void setup() {
   Wire.begin(ADR);          // join i2c bus as slave with address #8
   Wire.onRequest(SendTips); //call SendTips which address is recieved
@@ -67,6 +69,7 @@ void SendTips() {  //ISR for I2C requests
 }
 // next function to find intensity
 void Intensity(){
+  if (start){
 if (current_time == 0){
   current_time = millis();
   start_time = current_time;
@@ -81,5 +84,5 @@ else {
  current_time = 0;
  Serial.print("Wow we made it to the end of the measurement");
 }
-  
+  }
 }
