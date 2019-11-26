@@ -1,0 +1,15 @@
+Teensy 3.5 Pins for I2c Slave: 
+Note: pins numbers on Teensy 3.5 start with 0
+Tipping Pins: 
+	1.Red Line of Bucket is pin 3
+	2.Green and Yellow Lines share a pin: Pin 4
+I2C: 
+	1. SCL0 is pin 19
+	2. SDA0 is pin 18
+
+
+Teensy 3.5 Pins for I2c Slave: 
+	    
+
+        1. SCLO is pin 19
+	2. SDA0 is pin 18
