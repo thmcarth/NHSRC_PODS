@@ -205,7 +205,6 @@ void FONA3G::flushSerial(Serial){
     Serial.read();
 }
 
-
 uint16_t FONA3G::readnumber(){
 	uint16_t x = 0;
   char c;
