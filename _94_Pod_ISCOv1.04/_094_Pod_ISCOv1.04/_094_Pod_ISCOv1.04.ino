@@ -123,7 +123,7 @@ Ubidots client(TOKEN);
 
 
 //Voltage Readings
-#define BattRail_VIN A1
+#define BattRail_VIN A1 //Pin 15
 float BattVoltage;
 #define FiveRail_VIN A9
 float FiveVoltage;

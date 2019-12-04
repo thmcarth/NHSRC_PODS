@@ -151,6 +151,37 @@ void FONA3G::sendSMS(void) {
 	
 }
 
+void FONA3G::addInt(char* name,int value, char* units){
+	if (dataNum == 0)
+{
+sprintf(tempData,"%s%s;%i;%s;Green",tempData,name,value,units);
+}else
+{
+sprintf(tempData,"%s;%s;%i;%s;Green",tempData,name,value,units);
+}
+++dataNum;
+}
+void FONA3G::addFloat(char* name,int value, char* units){
+	if (dataNum == 0)
+{
+sprintf(tempData,"%s%s;%f;%s;Green",tempData,name,value,units);
+}else
+{
+sprintf(tempData,"%s;%s;%f;%s;Green",tempData,name,value,units);
+}
+++dataNum;
+}
+void FONA3G::addStr(char* name,int value, char* units){
+	if (dataNum == 0)
+{
+sprintf(tempData,"%s%s;%s;%s;Green",tempData,name,value,units);
+}else
+{
+sprintf(tempData,"%s;%s;%s;%s;Green",tempData,name,value,units);
+}
+++dataNum;
+}
+
 void FONA3G::ReadWebsiteURL(void) {
 	uint16_t statuscode;
         int16_t length;
