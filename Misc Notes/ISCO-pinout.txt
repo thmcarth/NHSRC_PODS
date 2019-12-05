@@ -1,0 +1,17 @@
+BOSS BOARD Pinout
+
+
+Name:Pin
+
+FONA Reset Pin: 4
+FONA Power Key: 37
+FONA Power Status: 38
+FONA Ring indicator BYPASS: 35
+Battery Rail_VIN: A1
+FiveRail_VIN: A9
+levelPin: A20
+Isco Sample Pin: 16 ---> we still don't know what this is
+Isco Serial: Serial 4
+HydraProbe Relay: 27
+RQ30 Relay: 26
+
