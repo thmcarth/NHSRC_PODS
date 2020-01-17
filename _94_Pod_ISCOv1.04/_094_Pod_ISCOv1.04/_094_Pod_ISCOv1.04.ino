@@ -111,11 +111,11 @@ unsigned long lastPost = millis();
 int minsToPost = 5;
 /////////////////////////////////////This section is taken from the Ubidots library which was modified to work with VIPER. Could change it since the TOKEN is irrelevant. But if it ain't broke....
 #include <Ubidots_FONA.h>  //Custom library specifically to post to VIPER with the FONA
-#define TOKEN "A1E-ft1AUBxmYrb1T5Rm37dnAHU7pjyXEC"  // Replace it with your Ubidots token
-#define APN "wholesale" // Assign the APN 
-#define USER ""  // If your apn doesnt have username just put ""
-#define PASS ""  // If your apn doesnt have password just put ""
-Ubidots client(TOKEN);
+//#define TOKEN "A1E-ft1AUBxmYrb1T5Rm37dnAHU7pjyXEC"  // Replace it with your Ubidots token
+//#define APN "wholesale" // Assign the APN 
+//#define USER ""  // If your apn doesnt have username just put ""
+//#define PASS ""  // If your apn doesnt have password just put ""
+//Ubidots client(TOKEN);
 ///////////////////////////////////////////////end weird Ubidots section
 
 
@@ -1285,6 +1285,16 @@ float getWaterIntensity() //parse the bottle Number from ISCO input
   return 0;
 }
 
+
+/*
+ * THE FUNCTIONS BEYOND THIS POINT ARE UPDATES TO THE ISCO'S FUNCTIONALITY 
+ */
+
+/*
+ * Daylight ST checks the clock of the Teensy and moves the hour to Daylight Savings if valid here
+ * No params
+ * 
+ */
 void DaylightST(){ //check to see if DST is active
   time_t eastern, utc;
 TimeChangeRule *tcr;
@@ -1296,7 +1306,10 @@ eastern = usEastern.toLocal(utc, &tcr);
 Serial.print("The time zone is: ");
 Serial.println(tcr -> abbrev);
 }
-
+/*
+ * compileTime helps the clock account for the time lag during compile/startup time
+ * no params
+ */
 time_t compileTime()
 {
     const time_t FUDGE(10);     // fudge factor to allow for compile time (seconds, YMMV)
@@ -1308,7 +1321,6 @@ time_t compileTime()
     chMon[3] = '\0';
     m = strstr(months, chMon);
     tm.Month = ((m - months) / 3 + 1);
-
     tm.Day = atoi(compDate + 4);
     tm.Year = atoi(compDate + 7) - 1970;
     tm.Hour = atoi(compTime);
@@ -1316,4 +1328,26 @@ time_t compileTime()
     tm.Second = atoi(compTime + 6);
     time_t t = makeTime(tm);
     return t + FUDGE;           // add fudge factor to allow for compile time
+}
+/*
+ * FonaPOST posts ISCO data to the Viper Server
+ * Check if FONA time is ready 
+ *  Check Conenction to IP/HTTP Session
+ *  Post an HTTPS push to the VIPER server
+ *  AccountID: ord-boss@viper.ert.org
+ *  POST URL: https://viper.response.epa.gov/cap/post
+ */
+void IntPOST(char* type,int val, char* units){
+/* 
+ *  
+ */
+ 
+}
+void StringPOST(char* type,char* string, char* units){
+
+  
+}
+void FloatPOST(char* type,float val, char* units){
+
+
 }
