@@ -1,0 +1,359 @@
+
+
+                     ^
+
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void setup()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:238:9: error: 'client' was not declared in this scope
+
+   if (! client.init(*GPRSSerial)) {
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:267:7: error: 'client' was not declared in this scope
+
+       client.setApn(APN, USER, PASS);
+
+       ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:267:21: error: 'APN' was not declared in this scope
+
+       client.setApn(APN, USER, PASS);
+
+                     ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:267:26: error: 'USER' was not declared in this scope
+
+       client.setApn(APN, USER, PASS);
+
+                          ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:267:32: error: 'PASS' was not declared in this scope
+
+       client.setApn(APN, USER, PASS);
+
+                                ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void loop()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:297:27: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+
+   if (millis() - lastPost > minsToPost * 60000) //Post data every (minsToPost) minutes
+
+                           ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:309:28: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+
+   if (millis() - fonaTimer > resetFona * 60000) //Reset fona every (resetFona) minutes
+
+                            ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:321:27: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+
+   if (millis() - lastSave > minsToSave * 60000) //Save data every (minsToSave) minutes (1 mins)
+
+                           ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:342:34: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+
+       if (millis() - sampleTimer > 60000 * grabSampleInterval) //.....AND....it's time to sample. Then sample.
+
+                                  ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:390:10: warning: unused variable 'a' [-Wunused-variable]
+
+     char a = Serial.read();
+
+          ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:391:10: warning: unused variable 'b' [-Wunused-variable]
+
+     char b = fonaSerial->read();
+
+          ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void checkTexts()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:437:11: warning: unused variable 'y' [-Wunused-variable]
+
+       int y = sprintf(message, "%s%f%s%f", "Battery Voltage = ", BattVoltage, "\n5V Rail Voltage= ", FiveVoltage);
+
+           ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:449:48: warning: ISO C++ forbids converting a string constant to 'char*' [-Wwrite-strings]
+
+           sendSMS(senderNum, "ISCO is disabled");
+
+                                                ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:459:45: warning: ISO C++ forbids converting a string constant to 'char*' [-Wwrite-strings]
+
+         sendSMS(senderNum, "Turned off ISCO");
+
+                                             ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:463:44: warning: ISO C++ forbids converting a string constant to 'char*' [-Wwrite-strings]
+
+         sendSMS(senderNum, "Turned on ISCO");
+
+                                            ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:475:57: warning: ISO C++ forbids converting a string constant to 'char*' [-Wwrite-strings]
+
+         sendSMS(senderNum, "Changed to AUTO Sample Mode");
+
+                                                         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:480:57: warning: ISO C++ forbids converting a string constant to 'char*' [-Wwrite-strings]
+
+         sendSMS(senderNum, "Changed to GRAB Sample Mode");
+
+                                                         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'int readSMS(int8_t)':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:587:7: warning: unused variable 'y' [-Wunused-variable]
+
+   int y = sprintf(senderNum, "%s", replybuffer);
+
+       ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void checkUserInput()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:759:101: warning: ISO C++ forbids converting a string constant to 'char*' [-Wwrite-strings]
+
+           sendSMS(senderNum, "All bottles are full. ISCO Sampler must be reset and bottles replaced");
+
+                                                                                                     ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void toggleSample()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:783:131: warning: ISO C++ forbids converting a string constant to 'char*' [-Wwrite-strings]
+
+       successTimText = sendSMS(timsPhone, "All bottles are full. ISCO Sampler must be reset and bottles replaced. Will not sample");
+
+                                                                                                                                   ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void clearIscoSerial()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:858:10: warning: unused variable 'a' [-Wunused-variable]
+
+     char a = iscoSerial.read();
+
+          ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void readIscoSerial()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:871:19: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+
+       if (cdIndex < sizeof(iscoData))
+
+                   ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'int getBottleNumber()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:895:11: warning: unused variable 'y' [-Wunused-variable]
+
+       int y = sprintf(bottleNumChar, "%c%c", iscoData[x + 2], iscoData[x + 3]);
+
+           ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'long unsigned int getSampledTime()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:912:9: warning: unused variable 'sampledTime' [-Wunused-variable]
+
+   float sampledTime;
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void sendSampleReply(char*)':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:956:7: warning: unused variable 'y' [-Wunused-variable]
+
+   int y = sprintf(message, "%s%i%s%i%s%i%s%i%s%i%s%i%s%i%s", "Sampled bottle ", getBottleNumber(), " @ ", month(sampled), "/", day(sampled), "/", year(sampled), "   ", hour(sampled), ":", minute(sampled), ":", second(sampled),"EST");
+
+       ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void postData()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:996:9: error: 'client' was not declared in this scope
+
+   if (! client.init(*GPRSSerial)) {
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'int getFonaStatus()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1038:9: warning: statement has no effect [-Wunused-value]
+
+   for (z; z < 1000; ++z)
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void setfileName()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1095:7: warning: unused variable 'y' [-Wunused-variable]
+
+   int y = sprintf(fileName, "%s%s%i%s", monthChar, dateChar, year(), ".txt");
+
+       ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'void buildDateTime()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1164:9: warning: unused variable 'y' [-Wunused-variable]
+
+     int y = sprintf(monthChar, "%c%i", '0', month());
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1167:9: warning: unused variable 'y' [-Wunused-variable]
+
+     int y = sprintf(monthChar, "%i", month());
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1172:9: warning: unused variable 'y' [-Wunused-variable]
+
+     int y = sprintf(dateChar, "%c%i", '0', day());
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1175:9: warning: unused variable 'y' [-Wunused-variable]
+
+     int y = sprintf(dateChar, "%i", day());
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1180:9: warning: unused variable 'y' [-Wunused-variable]
+
+     int y = sprintf(hourChar, "%c%i", '0', hour());
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1183:9: warning: unused variable 'y' [-Wunused-variable]
+
+     int y = sprintf(hourChar, "%i", hour());
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1188:9: warning: unused variable 'y' [-Wunused-variable]
+
+     int y = sprintf(minuteChar, "%c%i", '0', minute());
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1191:9: warning: unused variable 'y' [-Wunused-variable]
+
+     int y = sprintf(minuteChar, "%i", minute());
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1196:9: warning: unused variable 'y' [-Wunused-variable]
+
+     int y = sprintf(secondChar, "%c%i", '0', second());
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1199:9: warning: unused variable 'y' [-Wunused-variable]
+
+     int y = sprintf(secondChar, "%i", second());
+
+         ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'float getWaterIntensity()':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:1274:13: warning: unused variable 'y' [-Wunused-variable]
+
+       float y = sprintf(waterString, "%c%c%c%c", iscoData[x + 2], iscoData[x + 3], iscoData[x + 4], iscoData[x+5]);
+
+             ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'int readSMS(int8_t)':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:633:1: warning: control reaches end of non-void function [-Wreturn-type]
+
+ }
+
+ ^
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino: In function 'bool sendFona(char*)':
+
+C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:721:1: warning: control reaches end of non-void function [-Wreturn-type]
+
+ }
+
+ ^
+
+In file included from C:\Users\User\Documents\GitHub\NHSRC_PODS\_94_Pod_ISCOv1.04\_094_Pod_ISCOv1.04\_094_Pod_ISCOv1.04.ino:113:0:
+
+C:\Users\User\Documents\Arduino\libraries\Ubidots_FONA/Ubidots_FONA.h: At global scope:
+
+C:\Users\User\Documents\Arduino\libraries\Ubidots_FONA/Ubidots_FONA.h:38:18: warning: '{anonymous}::TIME_SERVER' defined but not used [-Wunused-variable]
+
+     const char * TIME_SERVER = "pool.ntp.org";
+
+                  ^
+
+C:\Users\User\Documents\Arduino\libraries\Ubidots_FONA/Ubidots_FONA.h:39:18: warning: '{anonymous}::PORT' defined but not used [-Wunused-variable]
+
+     const char * PORT = "8002";
+
+                  ^
+
+C:\Users\User\Documents\Arduino\libraries\Ubidots_FONA/Ubidots_FONA.h:40:18: warning: '{anonymous}::USER_AGENT' defined but not used [-Wunused-variable]
+
+     const char * USER_AGENT = "GPRS";
+
+                  ^
+
+C:\Users\User\Documents\Arduino\libraries\Ubidots_FONA/Ubidots_FONA.h:41:18: warning: '{anonymous}::VERSION' defined but not used [-Wunused-variable]
+
+     const char * VERSION = "3.0.0";
+
+                  ^
+
+C:\Users\User\Documents\Arduino\libraries\Ubidots_FONA/Ubidots_FONA.h:45:9: warning: '{anonymous}::identnum' defined but not used [-Wunused-variable]
+
+     int identnum = 1;
+
+         ^
+
+C:\Users\User\Documents\Arduino\libraries\Ubidots_FONA/Ubidots_FONA.h:46:6: warning: '{anonymous}::tempData' defined but not used [-Wunused-variable]
+
+ char tempData[2000];
+
+      ^
+
+C:\Users\User\Documents\Arduino\libraries\Ubidots_FONA/Ubidots_FONA.h:47:5: warning: '{anonymous}::dataNum' defined but not used [-Wunused-variable]
+
+ int dataNum = 0;
+
+     ^
+
+Multiple libraries were found for "EEPROM.h"
+ Used: C:\Users\User\Documents\Arduino\libraries\EEPROM
+ Not used: C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM
+Multiple libraries were found for "SD.h"
+ Used: C:\Users\User\Documents\Arduino\libraries\SD
+ Not used: C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD
+Multiple libraries were found for "SPI.h"
+ Used: C:\Users\User\Documents\Arduino\libraries\SPI
+ Not used: C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SPI
+Multiple libraries were found for "Timezone.h"
+ Used: C:\Users\User\Documents\Arduino\libraries\Timezone
+ Not used: C:\Users\User\Documents\Arduino\libraries\Timezone-master
+Multiple libraries were found for "TimeLib.h"
+ Used: C:\Users\User\Documents\Arduino\libraries\Time
+ Not used: C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Time
+ Not used: C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Time
+ Not used: C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Time
+ Not used: C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Time
+Multiple libraries were found for "Adafruit_SleepyDog.h"
+ Used: C:\Users\User\Documents\Arduino\libraries\Adafruit_SleepyDog-master
+ Not used: C:\Users\User\Documents\Arduino\libraries\Adafruit_SleepyDog_Library
+Error compiling for board Teensy 3.5.
+
+This report would have more information with
+"Show verbose output during compilation"
+option enabled in File -> Preferences.
