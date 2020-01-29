@@ -1,7 +1,8 @@
+//#include <Adafruit_FONA.h>
 #include <Timezone.h>
 #include <Time.h>
 #include <TimeLib.h>
-//#include <Ubidots_FONA.h>
+#include <Ubidots_FONA.h>
 
 
 /* * Teensy 3.5 Custom PCB developed to automate ISCO 6700 Sampling with a digital output pin
