@@ -120,8 +120,14 @@ int minsToPost = 5;
 ///////////////////////////////////////////////end weird Ubidots section
 
 
-////////////////////////////////////
-
+//Timing for Samples
+boolean sample_occurred = false; // goes true when a sample occurs
+long sample_start = 0;  // keeps time for sample start
+long sample_stop = 0; // once this 
+long sample_stop_time = 5;  // 5 minutes
+long sample_period = 8;// 8 hours
+int  samples_allowed = 2;
+////////////////////////////
 
 //Voltage Readings
 #define BattRail_VIN A1 //Pin 15
