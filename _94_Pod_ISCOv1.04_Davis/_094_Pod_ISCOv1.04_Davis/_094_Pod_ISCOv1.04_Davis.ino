@@ -72,7 +72,7 @@ char bVChar[10];
 
 ///////////////////////////////////////
 //Static numbers to text when bottles are full and accept SMS comands from:
-char* timsPhone = "+19199204318";
+char* timsPhone = "+12524126262";
 //Numbers to accept SMS commands from:
 char* annesPhone1 = "+19198860812";
 char* annesPhone2 = "+15179451531";
@@ -1308,6 +1308,7 @@ void I2C_rain(){
   }
   else
   {
+      double inch = tips/100;
       tips = tips/Intensity_period;
       Serial.println(tips);  //Prints out tips to monitor
   }
