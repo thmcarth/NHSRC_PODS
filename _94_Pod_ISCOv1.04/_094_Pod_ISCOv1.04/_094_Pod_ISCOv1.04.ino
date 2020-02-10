@@ -322,6 +322,7 @@ void loop() {
     Serial.print(((minsToPost * 60000) - (millis() - lastPost)) / 1000); Serial.println(" Seconds left b4 Post");
   }
 #ifdef DAVIS
+unsigned long currentWaterMillis = millis();
 if(currentWaterMillis - previousMillis > rain_period) {
     // save the last time you blinked the LED 
     previousMillis = currentWaterMillis;  
