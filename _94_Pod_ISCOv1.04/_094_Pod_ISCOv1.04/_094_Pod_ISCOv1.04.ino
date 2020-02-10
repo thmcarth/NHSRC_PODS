@@ -1,7 +1,8 @@
+//#include <Adafruit_FONA.h>
 #include <Timezone.h>
 #include <Time.h>
 #include <TimeLib.h>
-//#include <Ubidots_FONA.h>
+#include <Ubidots_FONA.h>
 
 
 /* * Teensy 3.5 Custom PCB developed to automate ISCO 6700 Sampling with a digital output pin
@@ -119,8 +120,14 @@ int minsToPost = 5;
 ///////////////////////////////////////////////end weird Ubidots section
 
 
-////////////////////////////////////
-
+//Timing for Samples
+boolean sample_occurred = false; // goes true when a sample occurs
+long sample_start = 0;  // keeps time for sample start
+long sample_stop = 0; // once this 
+long sample_stop_time = 5;  // 5 minutes
+long sample_period = 8;// 8 hours
+int  samples_allowed = 2;
+////////////////////////////
 
 //Voltage Readings
 #define BattRail_VIN A1 //Pin 15
