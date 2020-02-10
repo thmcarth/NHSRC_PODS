@@ -1,0 +1,23 @@
+ Example of XML format here!
+<?xml version="1.0" encoding="utf-16"?>
+<alert
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-
+instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns="urn:oasis:names:tc:emergency:cap:1.1">
+<identifier>281005951_634498074648864996</identifier>
+<sender>Leakwise</sender>
+<sent>2011-08-19T15:31:03-04:00</sent>
+<status>Actual</status>
+<msgType>Alert</msgType>
+<source>Leakwise,Leakwise.xml,000000000000,000000000000</source>
+<scope>Public</scope>
+<info>
+<urgency>Immediate</urgency>
+<severity>Extreme</severity>
+<certainty>Observed</certainty>
+<headline>MsgHeader;1)12:31 Leakwise ERT
+Leakwise;;Transparent;Medium;Oil;;Yellow;sig;892;uA;
+Yellow;OilThickness;25;mm;Yellow;Battery;11.9;V;Green</headline>
+</info>
+</alert> 
