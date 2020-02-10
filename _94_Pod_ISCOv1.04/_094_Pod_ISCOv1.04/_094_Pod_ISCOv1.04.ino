@@ -86,8 +86,18 @@ int deleteSMSSuccess = 0;
 int sender_count = 0;
 ////////////////////////////////////////////////
 
-//FONA HTTP
+//DAVIS RAINBUCKET
+#define DAVIS 0
+///////////////I2C Comms
+#include <Wire.h>
+int Intensity_period = 30; // Intensity period and how often we want to ask device for rainfall intensity.
+unsigned long UpdateRate = 4000; //Number of ms between serial prints, 4 seconds by default
+uint8_t ADR = 0x08; //Address of slave device, 0x08 by default
+long rain_period = Intensity_period;
+long previousMillis = 0; 
+//////////////END I2C Inits
 
+//FONA HTTP
 #include "Adafruit_FONA.h"
 char senderNum[30];    //holds number of last number to text SIM
 #define FONA_RST 4
@@ -311,8 +321,13 @@ void loop() {
   {
     Serial.print(((minsToPost * 60000) - (millis() - lastPost)) / 1000); Serial.println(" Seconds left b4 Post");
   }
-
-
+#ifdef DAVIS
+if(currentWaterMillis - previousMillis > rain_period) {
+    // save the last time you blinked the LED 
+    previousMillis = currentWaterMillis;  
+    I2C_rain();
+  } 
+#endif 
   if (millis() - fonaTimer > resetFona * 60000) //Reset fona every (resetFona) minutes
   {
     toggleFona(); //turn off Fona
@@ -1358,3 +1373,31 @@ void FloatPOST(char* type,float val, char* units){
 
 
 }
+#ifdef DAVIS 
+void I2C_rain(){
+
+   unsigned int tips = 0; //Used to measure the number of tips
+  uint8_t Byte1 = 0; //Bytes to read then concatonate
+  uint8_t Byte2 = 0;
+
+  Wire.requestFrom(ADR, 2);    // request 2 bytes from slave device #8
+  
+  Byte1 = Wire.read();  //Read number of tips back
+  Byte2 = Wire.read();
+
+  tips = ((Byte2 << 8) | Byte1); //Concatenate bytes
+
+  Serial.print("Intensity last read = ");
+
+  if (tips == 65535)
+  {
+      Serial.println("Sensor not connected");  // tips == 65535 if I2C isn't connectected
+  }
+  else
+  {
+      double inch = tips/100;
+      tips = tips/Intensity_period;
+      Serial.println(tips);  //Prints out tips to monitor
+  }
+}
+#endif
