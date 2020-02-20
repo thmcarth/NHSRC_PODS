@@ -321,7 +321,11 @@ void loop() {
   {
     Serial.print(((minsToPost * 60000) - (millis() - lastPost)) / 1000); Serial.println(" Seconds left b4 Post");
   }
-#ifdef DAVIS
+
+
+
+#if DAVIS
+//>>>>>>> 6b4848fa0c3169bf08481d0b8e37c27756e02b87
 unsigned long currentWaterMillis = millis();
 if(currentWaterMillis - previousMillis > rain_period) {
     // save the last time you blinked the LED 
@@ -1374,7 +1378,7 @@ void FloatPOST(char* type,float val, char* units){
 
 
 }
-#ifdef DAVIS 
+#if DAVIS 
 void I2C_rain(){
 
    unsigned int tips = 0; //Used to measure the number of tips
