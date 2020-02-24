@@ -4,13 +4,15 @@
   These displays use TTL Serial to communicate, 2 pins are required to
   interface
   
+  
+  
  ****************************************************/
 
 
 #include "HTTPS_VIPER.h"
 #include "Arduino.h"
 #include "Adafrut_FONA.h"
-
+#include "Encoder.h"
 
 
 //back at EPA need to add in the encoder
@@ -22,11 +24,12 @@ HTTPS_VIPER::HTTPS_VIPER()
 }
 
 int HTTPS_VIPER::getLength(char* content){
-int values = sizeof(content);
+int values = sizeof(content)/sizeof(content[0]);
 return values;
 }
 
-    char* HTTPS_VIPER::build_POST(int data_length, char* host,char* auth, char* body){
+    char* HTTPS_VIPER::build_POST(int data_length, char* host,char* auth, char* body)
+	{
 	char* header;
 	char post[] = "POST /CAP/post HTTP/1.1\n";  // Note! Order does not matter for an http Header
     char connection[] = "Connection: Keep-Alive\n";
@@ -37,10 +40,11 @@ return values;
 	char *content;
 	sprintf(content, "Content-Length: %s\n", data_length);
 	sprintf(header,"%s%s%s%s%s", post, host, authorization,content, connection);
-	char* full_message
-	sprintf(full_message,
+	char* full_message;
+	sprintf(full_message, "%s", header);
 
 }
+
 
 void HTTPS_VIPER::start_HTTP(Serial s){
 	// turn HTTPS Stack on
