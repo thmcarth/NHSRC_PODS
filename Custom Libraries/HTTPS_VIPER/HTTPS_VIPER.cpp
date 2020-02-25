@@ -72,7 +72,7 @@ void HTTPS_VIPER::Send_HTTP(Serial s, char* post){
 	 
 }
 
- int try_send (Serial s){
+ int HTTPS_VIPER::try_send (Serial s){
 	if (s.available() > 0){
 		
 	for(int i = 0; i<300; i++){

@@ -25,6 +25,7 @@ class HTTPS_VIPER {
 	void Close_HTTP(Serial s);
  private:
    int getLength(char* content);
+   int try_send (Serial s);
 };
 
 #endif
