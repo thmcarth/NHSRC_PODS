@@ -1,7 +1,7 @@
 /***************************************************
   This is a library for the Adafruit FONA 3G Cellular Module for HTTP 
 
-  These displays use TTL Serial to communicate, 2 pins are required to
+  These displays use TTL Stream to communicate, 2 pins are required to
   interface
   
   
@@ -11,16 +11,16 @@
 
 #include "HTTPS_VIPER.h"
 #include "Arduino.h"
-#include "Adafrut_FONA.h"
-#include "Encoder.h"
+#include "Adafruit_FONA.h"
+#include "Encoder.h" // if we need to add in dynamic 64 base encoding
 
 
-//back at EPA need to add in the encoder
 
 
-HTTPS_VIPER::HTTPS_VIPER()
+
+HTTPS_VIPER::HTTPS_VIPER(int fona_pin)
 {
-  Adafruit_FONA_3G fona = Adafruit_FONA_3G(FONA_RST)
+  Adafruit_FONA_3G fona = Adafruit_FONA_3G(rst);
 }
 
 int HTTPS_VIPER::getLength(char* content){ // use this to find body length, header length and total length of HTTP POST
@@ -47,18 +47,24 @@ return values;
 }
 
 
-void HTTPS_VIPER::start_HTTP(Serial s){
+void HTTPS_VIPER::start_HTTP(){
 	// turn HTTPS Stack on
   s.println("AT+CHTTPSSTART");
 }
 
-void HTTPS_VIPER::Open_HTTP(Serial s, char* host, char* port){
+void HTTPS_VIPER::Open_HTTP(char* host, char* port){
 char* open;
 sprintf(open, "AT+CHTTPSOPSE=\"%s\",%s,2", host, port);
 s.println(open);
 }
 
-void HTTPS_VIPER::Send_HTTP(Serial s, char* post){
+bool HTTPS_VIPER::init(Stream &port) {
+    client = &port;
+   //powerUpOrDown(); //placeholder for function to turn on/off GPRS shield
+    return true;
+}
+
+void HTTPS_VIPER::Send_HTTP(char* post){
 	char* send;
 	int ready = 0;
 	int length = HTTPS_VIPER::getLength(post);
@@ -72,7 +78,7 @@ void HTTPS_VIPER::Send_HTTP(Serial s, char* post){
 	 
 }
 
- int HTTPS_VIPER::try_send (Serial s){
+ int HTTPS_VIPER::try_send (){
 	if (s.available() > 0){
 		
 	for(int i = 0; i<300; i++){
@@ -86,11 +92,11 @@ void HTTPS_VIPER::Send_HTTP(Serial s, char* post){
 	return 0;
 }
 
-void HTTPS_VIPER::Stop_HTTP(Serial s){
+void HTTPS_VIPER::Stop_HTTP(){
 s.println("AT+CHTTPSSTOP");
 }
 
-void HTTPS_VIPER::Close_HTTP(Serial s){
+void HTTPS_VIPER::Close_HTTP(){
 	s.println("AT+CHTTPSCLSE");
 }
 

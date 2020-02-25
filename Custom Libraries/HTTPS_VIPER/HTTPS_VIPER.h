@@ -12,20 +12,22 @@
 #include <Stream.h>
 #include <stdio.h>  
 
-
 class HTTPS_VIPER {
 
  public:
-    explicit HTTPS_VIPER();
-    char* build_POST( char* host,char* auth, char* body);
-    void start_HTTP(Serial s);
-	void Send_HTTP(Serial s, char* post);
-	void Stop_HTTP(Serial s);
-	void Open_HTTP(Serial s, char* host, char* port);
-	void Close_HTTP(Serial s);
+    HTTPS_VIPER(int fona_pin); //Initialize this class with the Reset Pin
+    char* build_POST( char* host,char* auth, char* body); //host is the url, auth is username and password (base64 encoded),
+	                                                      //body is the entire POST body that is beneath the message header
+														  //the body is built elsewhere
+    void start_HTTP(Stream s);
+	void Send_HTTP(Stream s, char* post);
+	void Stop_HTTP(Stream s);
+	void Open_HTTP(Stream s, char* host, char* port);
+	void Close_HTTP(Stream s);
  private:
    int getLength(char* content);
-   int try_send (Serial s);
+   int try_send (Stream s);
+   Stream *serial;
 };
 
 #endif
