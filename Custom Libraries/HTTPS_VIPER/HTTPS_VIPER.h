@@ -1,7 +1,14 @@
-/*
-  HTTPS Library by Hawes Collier 
-  Used for communicating with 
-*/
+/***************************************************
+  This is a library for the Adafruit FONA 3G Cellular Module for HTTP 
+
+  These displays use TTL Stream to communicate, 2 pins are required to
+  interface
+  
+  @Author Hawes Collier
+  @Credit to Adafruit and Ubidots for providing some example libraries
+  @Owned by the USEPA 
+  
+ ****************************************************/
 
 #ifndef HTTPS_VIPER_H
 #define HTTPS_VIPER_H
@@ -19,15 +26,20 @@ class HTTPS_VIPER {
     char* build_POST( char* host,char* auth, char* body); //host is the url, auth is username and password (base64 encoded),
 	                                                      //body is the entire POST body that is beneath the message header
 														  //the body is built elsewhere
-    void start_HTTP(Stream s);
-	void Send_HTTP(Stream s, char* post);
-	void Stop_HTTP(Stream s);
-	void Open_HTTP(Stream s, char* host, char* port);
-	void Close_HTTP(Stream s);
+    void start_HTTP();  // this must be first 
+	void Send_HTTP(char* post);  //HTTPS OPEN first
+	void Stop_HTTP();  // call when we want to end everything
+	void Open_HTTP( char* host, char* port); //2nd 
+	void Close_HTTP(); //call at the end when we are done
+	bool is_error(); // call at the end of each AT command call. --> reads AT to see if ERROR was returned.
+	char* read_FONA(); //read the AT command response
+	bool init(Stream &port); //call to initialize serial to FONA (may not be necessary each time)
  private:
+   String charToString(char S[]);
    int getLength(char* content);
-   int try_send (Stream s);
-   Stream *serial;
+   void powerUpOrDown();  
+   int try_send ();
+   Stream *s;
 };
 
 #endif
