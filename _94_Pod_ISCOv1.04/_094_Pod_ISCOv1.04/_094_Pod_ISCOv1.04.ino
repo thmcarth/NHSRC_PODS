@@ -1070,6 +1070,7 @@ char port[] = "6991";
 //char post_total* = http.build_POST(host,authorization,body);
 http.Open_HTTP(host,port);
 http.Send_HTTP(http.build_POST(host,authorization,body));
+http.Close_HTTP();
 /*
 
     https://github.com/adafruit/Adafruit_FONA/pull/81/commits/0332448e79a18ad206cb6e80d23a6d739e62940c 
