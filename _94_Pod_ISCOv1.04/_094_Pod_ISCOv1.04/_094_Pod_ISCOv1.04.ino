@@ -1,3 +1,5 @@
+//#include <Adafruit_INA260.h>
+
 #include <HTTPS_VIPER.h>
 //#include <Adafruit_FONA.h>
 #include <Timezone.h>
@@ -100,6 +102,11 @@ unsigned long UpdateRate = 4000; //Number of ms between serial prints, 4 seconds
 uint8_t ADR = 0x08; //Address of slave device, 0x08 by default
 long rain_period = Intensity_period;
 long previousMillis = 0; 
+
+//INA260 comms
+int INA = B10000000; //connect
+uint8_t INA_I = 0x01;
+uint8_t INA_V = 0x02;
 //////////////END I2C Inits
 
 //FONA HTTP
@@ -1045,28 +1052,30 @@ void postData() //post Data to VIPER
       intWL = 0;
       levelReading = 0;
     }
-    //client.addFloat("moisture1", moisture * 100, "%");
-    //client.addFloat("moisture2", moisture2 * 100, "%");
-    //client.addFloat("moisture3", moisture3 * 100, "%");
-    //client.addFloat("temp1", temp, "degC");
-    //client.addFloat("temp2", temp2, "degC");
-    //client.addFloat("temp3", temp3, "degC");
+    char allData[1000];
+          char str_values[10];
+          char postS[500];
+          char tempS[100];
+         static char ident[25];
+          char sourceS[30];
+          char footer[30];
+          char header[500];
+    //add any other values you want sent to VIPER with one of the commands below 
     http.addInt("Bottle Number", getBottleNumber(), "/24");
     http.addFloat("Battery Voltage", BattVoltage, "V");
     http.addInt("Level Reading", intWL, " 0/50");
     int unit = 1;
     char* GPS = "0,0 0";
-   char* body = http.build_body(unit, GPS);
+   char* body = http.build_body(unit, GPS); // call this line after you add all data you want for the VIPER post
    
-    //client.add(VARIABLE_LABEL_2, humidity);
-    ///client.add(VARIABLE_LABEL_3, pressure);
     //client.sendAll(unit, GPS);  //NEED TO REPLACE THIS WITH YOUR HTTP START, OPEN, SEND, CLOSE!
     http.start_HTTP();
 char post[] =  "POST /CAP/post HTTP/1.1\n";
 char host[] = "https://viper.response.epa.gov/CAP/post\n";
 char connection[] = "Connection: Keep-Alive\n";
 char authorization[] = "Y29sbGllci5qYW1lc0BlcGEuZ292OldldGJvYXJkdGVhbTEh"; //encoded my username and password in base 64
-char port[] = "6991";
+char port[] = "443";
+
 //char post_total* = http.build_POST(host,authorization,body);
 http.Open_HTTP(host,port);
 http.Send_HTTP(http.build_POST(host,authorization,body));
@@ -1097,7 +1106,7 @@ char post[] =  "POST /CAP/post HTTP/1.1\n";
 char host[] = "https://viper.response.epa.gov/CAP/post\n";
 char connection[] = "Connection: Keep-Alive\n";
 char authorization[] = "Y29sbGllci5qYW1lc0BlcGEuZ292OldldGJvYXJkdGVhbTEh"; //encoded my username and password in base 64
-char port[] = "6991";
+char port[] = "443";
 char xml[1000];
 char http_header[300];
 
@@ -1471,6 +1480,27 @@ void StringPOST(char* type,char* string, char* units){
 }
 void FloatPOST(char* type,float val, char* units){
 
+
+}
+
+void INA_read(){
+/*
+ * 
+//INA260 comms
+int INA = B10000000; //connect
+uint8_t INA_I = 0x01;
+uint8_t INA_V = 0x02;
+
+All data bytes are transmitted most significant byte first.
+ */
+   uint8_t Byte1 = 0; //Bytes to read then concatonate
+  uint8_t Byte2 = 0;
+   int * address = INA;
+   double divisor = 800.0;
+  Wire.beginTransmission(INA);
+  Wire.write(INA);
+  delay(1);
+  Wire.write(INA_I);
 
 }
 #if DAVIS 
