@@ -850,6 +850,7 @@ void toggleSample()
 
 void Sample()
 {
+  
   Serial.println("Sending signal to ISCO");
   digitalWrite(IscoSamplePin, HIGH);
   delay(3000);
@@ -900,7 +901,7 @@ void clearIscoSerial()
 }
 
 
-void readIscoSerial()
+void readIscoSerial() //CHECK FOR OVERFLOW ON THIS ARRAY
 {
   unsigned long timer = millis();
   do
@@ -910,7 +911,7 @@ void readIscoSerial()
       char a = iscoSerial.read();
       if (cdIndex < sizeof(iscoData))
       {
-        iscoData[cdIndex] = a;
+        iscoData[cdIndex] = a; //here might need to ring buffer
       }
       ++cdIndex;
     }
@@ -1064,6 +1065,9 @@ void postData() //post Data to VIPER
     http.addInt("Bottle Number", getBottleNumber(), "/24");
     http.addFloat("Battery Voltage", BattVoltage, "V");
     http.addInt("Level Reading", intWL, " 0/50");
+
+
+    
     int unit = 1;
     char* GPS = "0,0 0";
    char* body = http.build_body(unit, GPS); // call this line after you add all data you want for the VIPER post
@@ -1154,7 +1158,7 @@ int unit = 1;
 */        
 
 
-    //http.Open_HTTP(host,port);
+  
     http.clearData();
     Serial.println("Reached end of postData");
      }

@@ -221,16 +221,16 @@ bool HTTPS_VIPER::is_error(){
 
 void HTTPS_VIPER::Send_HTTP(char* post){
 	char* send = (char *) malloc(sizeof(char) * 2000);
-	int ready = 0;
+	int ready = 1;
 	int length = HTTPS_VIPER::getLength(post);
 	sprintf(send, "AT+CHTTPSSEND=%i", length);
 	s->println(send);
 	delay(10);
-	
+	//fix ready
 	if (ready){
 	s->println(post);	
 	}
-	 
+	 //free
 }
 
  int HTTPS_VIPER::try_send (){
