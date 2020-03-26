@@ -21,7 +21,7 @@ Serial.println("some of rain");
 }
 else{
 condition = 1; //not much
-Serial.println("not rain");
+Serial.println("no rain");
 
 }
 delay(250); // remove this if the loop becomes a function in a separate program
