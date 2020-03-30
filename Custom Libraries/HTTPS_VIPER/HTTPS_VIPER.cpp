@@ -70,7 +70,7 @@ sprintf(ident,"%i",identnum);
 char* HTTPS_VIPER::build_POST( char* host,char* auth, char* body) //data_length is all the length of the body
 	{
 		
-	char* b = (char *) malloc(sizeof(char) * 1500);
+	char* b = (char *) malloc(sizeof(char) * 3000);
 	int body_length;
 	body_length = sprintf(b,"%s",body);
 	
@@ -221,16 +221,16 @@ bool HTTPS_VIPER::is_error(){
 
 void HTTPS_VIPER::Send_HTTP(char* post){
 	char* send = (char *) malloc(sizeof(char) * 2000);
-	int ready = 1;
+	int ready = 0;
 	int length = HTTPS_VIPER::getLength(post);
 	sprintf(send, "AT+CHTTPSSEND=%i", length);
 	s->println(send);
 	delay(10);
-	//fix ready
+	
 	if (ready){
 	s->println(post);	
 	}
-	 //free
+	 
 }
 
  int HTTPS_VIPER::try_send (){
@@ -255,3 +255,6 @@ void HTTPS_VIPER::Close_HTTP(){
 	s->println("AT+CHTTPSCLSE");
 }
 
+void HTTPS_VIPER::check_GPRS(){
+	s->println("AT+CGATT=?");
+}

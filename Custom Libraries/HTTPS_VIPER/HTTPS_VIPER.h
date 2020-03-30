@@ -45,6 +45,7 @@ class HTTPS_VIPER {
 	void addInt(char* name,int value, char* units);
 	void addFloat(char* name,float value, char* units);
 	void addString(char* name,char* value, char* units);
+	void check_GPRS();
  private:
    String charToString(char S[]);
    int getLength(char* content);
