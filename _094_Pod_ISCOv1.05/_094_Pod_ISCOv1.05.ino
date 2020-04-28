@@ -1,4 +1,4 @@
-//#include <Adafruit_INA260.h>
+#include <Adafruit_INA260.h>
 
 #include <HTTPS_VIPER.h>
 //#include <Adafruit_FONA.h>
@@ -37,7 +37,7 @@
 
 char GPS[] = "40.5087450, -74.3580650 0"; //needs a (space 0) at the end, example ="35.068471,-89.944730 0"
 int unit = 6;
-char versionNum[] = "_094_Pod_ISCOv1.04";
+char versionNum[] = "_094_Pod_ISCOv1.05";
 
 //////////////////////////////////
 
@@ -83,6 +83,7 @@ char* annesPhone2 = "+15179451531";
 char* katherinesPhone = "+16157148918";
 char* worthsPhone = "+19194233837";
 char* googlePhone = "+19192301472";
+char* garrettPhone = "+19196019412";
 bool successTimText = false; //logic to control when to text bottle full message
 int readSMSSuccess = 0;
 int deleteSMSSuccess = 0;
@@ -110,39 +111,16 @@ uint8_t INA_V = 0x02;
 //////////////END I2C Inits
 
 //FONA HTTP
-#include "Adafruit_FONA.h"
+HTTPS_VIPER http = HTTPS_VIPER(); 
 char senderNum[30];    //holds number of last number to text SIM
-#define FONA_RST 4
+
 char replybuffer[255]; //holds Fonas text reply
 char * replybuffer_command; //holds Fonas command part
 char * replybuffer_interval; //holds Fonas interval part
-HardwareSerial *fonaSerial = &Serial5;
-HardwareSerial *GPRSSerial = &Serial5;
-#define FONA_PKEY 37 //Power Key pin to turn on/off Fona
-#define FONA_PS 38 //Power Status PIN
-#define FONA_RI_BYPASS 35 //Pull this pin high to bypass the ring indicator pin when resetting the Fona from the Teensy so the Fona doesn't lock up
-bool fonaPower = true; //Whether or not Fona is currently powered on
-int fonaStatus;
-//Adafruit_FONA fona = Adafruit_FONA(FONA_RST);
-Adafruit_FONA_3G fona = Adafruit_FONA_3G(FONA_RST);
-uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout = 0);
+HardwareSerial *xbeeSerial = &Serial5;
 int commandNum = -1; //integer value for which text command has been sent
-uint8_t type;
-unsigned long deleteTextsTimer = millis(); //after a set timeout, all(30) texts are deleted from SIM
-bool _debug = true;
 unsigned long lastPost = millis();
 int minsToPost = 5;
-/////////////////////////////////////This section is taken from the Ubidots library which was modified to work with VIPER. Could change it since the TOKEN is irrelevant. But if it ain't broke....
-//#include <Ubidots_FONA.h>  //Custom library specifically to post to VIPER with the FONA
-//#define TOKEN "A1E-ft1AUBxmYrb1T5Rm37dnAHU7pjyXEC"  // Replace it with your Ubidots token
-//#define APN "wholesale" // Assign the APN 
-//#define USER ""  // If your apn doesnt have username just put ""
-//#define PASS ""  // If your apn doesnt have password just put ""
-//Ubidots client(TOKEN);
-HTTPS_VIPER http = HTTPS_VIPER();
-///////////////////////////////////////////////end weird Ubidots section
-
-
 //Timing for Samples
 boolean sample_occurred = false; // goes true when a sample occurs
 long sample_start = 0;  // keeps time for sample start
@@ -196,14 +174,15 @@ unsigned long iscoTimeout = millis();
 
 ///////////////////////////RELAYS
 bool RQ30 = true;
+//Soil moisture is on pin 30
 #define HPRelay 27 //Outpin PIN to control HydraProbe 12V Rail
 #define RQ30Relay 26 //Output PIN to control RQ30 12V Rail
 unsigned long fonaTimer = millis(); //timer to reset Fona
-int resetFona = 60; //reset Fona every X minutes
 //////////////////////////RELAYS
 
 
 void setup() {
+  Adafruit_INA260 ina260 = Adafruit_INA260();
   Serial.begin(9600);
   int countdownMS = Watchdog.enable(300000); //300 seconds or 5 minutes watchdog timer
   Serial.print("Enabled the watchdog with max countdown of ");
@@ -222,80 +201,22 @@ void setup() {
   if (!SD.begin(chipSelect)) {
     Serial.println("initialization failed!");
   }
-  Serial.println("initialization done.");
-
-  Serial.print("Code --- ");Serial.println(versionNum);
+  Serial.println("SD Card initialization done.");
+  Serial.print("Code version ");Serial.println(versionNum);
 
   pinMode(HPRelay, OUTPUT); //Set up HydraProbe relay
-  pinMode(FONA_PKEY, OUTPUT); //Power Key INPUT
-  pinMode(FONA_RI_BYPASS, OUTPUT); //FONA RI BYPASS signal - RI Bypass keeps the RI line high while the Fona is resetting, so the Teensy doesn't reset
-  pinMode(FONA_PS, INPUT); //Power Status INPUT
+ 
   //pinMode(levelPin, INPUT);
   delay(50);
-  digitalWrite(FONA_RI_BYPASS, HIGH); //RI Bypass on
+  
   pinMode(BattRail_VIN, INPUT);
   digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
-  Watchdog.reset();
-  Serial.print("Fona is...");
-  Serial.print(getFonaStatus());
-  if (getFonaStatus() > 500)
-  {
-    Serial.println(" On!");
-    digitalWrite(FONA_RI_BYPASS, LOW); //If fona is already on, we can disable RI bypass
-  } else
-  {
-    Serial.println(" off.");
-  }
-  if (getFonaStatus() < 500)
-  {
-    digitalWrite(FONA_RI_BYPASS, HIGH); //If fona is not on, make sure RI bypass is high
-    Serial.println("Turning on Fona");
-    digitalWrite(FONA_PKEY, HIGH);
-    delay(2000);
-    digitalWrite(FONA_PKEY, LOW); //turn on Fona
-    delay(5000);
-    digitalWrite(FONA_PKEY, HIGH); //turn on Fona
-    delay(2000);
-    digitalWrite(FONA_RI_BYPASS, LOW); //...and disable RI bypass
-    Serial.println("Done");
-
-  }
   Watchdog.reset();
   EEPROM.get(eepromModeAddr, grabSampleMode); //Get Sampling mode from EEPROM
   EEPROM.get(eepromIntervalAddr, grabSampleInterval); //Get sampleInterval from EEPROM
   Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println("minutes");
-  GPRSSerial->begin(4800);  //Startup HTTP post client
-  if (! http.init(*GPRSSerial)) {
-    Serial.println(F("Couldn't find FONA"));
-    //while (1);
-  }
-
-  //fonaSerial->begin(19200); //Startup SMS and Cell client
-  if (! fona.begin(*fonaSerial)) {
-    Serial.println(F("Couldn't find FONA"));
-    //while (1);
-  }
-  type = fona.type();
-  Serial.println(F("FONA is OK"));
-  Serial.print(F("Found "));  //Get Fona type from module and display as status to user
-  switch (type) {
-    case FONA800L:
-      Serial.println(F("FONA 800L")); break;
-    case FONA800H:
-      Serial.println(F("FONA 800H")); break;
-    case FONA808_V1:
-      Serial.println(F("FONA 808 (v1)")); break;
-    case FONA808_V2:
-      Serial.println(F("FONA 808 (v2)")); break;
-    case FONA3G_A:
-      Serial.println(F("FONA 3G (American)")); break;
-    case FONA3G_E:
-      Serial.println(F("FONA 3G (European)")); break;
-    default:
-      Serial.println(F("???")); break;
-
- //     client.setApn(APN, USER, PASS);
-  }
+  //xbeeSerial->begin(19200); //Startup SMS and Cell client
+  
   pinMode(IscoSamplePin, OUTPUT);  // Setup sample pin output
   digitalWrite(IscoSamplePin, LOW);
   Serial.begin(9600);
@@ -304,9 +225,10 @@ void setup() {
 }
 
 void loop() {
+    Watchdog.reset();
   if (ISCORail) // this is true at start
   {
-    Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
+    //Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
     do {
       Watchdog.reset();
     } while (iscoSerial.available() == 0 && millis() - iscoTimeout < 40000); //If there is data on the serial line, OR its been 40 seconds, continue
@@ -321,7 +243,7 @@ void loop() {
   }
   checkTexts(); //check for SMS commands
   Watchdog.reset(); //ensure the system doesn't prematurely reset
-  //checkHydraProbes();
+  checkHydraProbes();
   checkUserInput(); //check Serial for input commands
   getBV(); //get voltage rail readings
   if (millis() - lastPost > minsToPost * 60000) //Post data every (minsToPost) minutes
@@ -329,7 +251,7 @@ void loop() {
     postData();
     lastPost = millis(); //reset timer
     clearIscoSerial(); //clear isco and fona serials
-    flushFonaSerial();
+    flushxbeeSerial();
   } else
   {
     Serial.print(((minsToPost * 60000) - (millis() - lastPost)) / 1000); Serial.println(" Seconds left b4 Post");
@@ -346,17 +268,6 @@ if(currentWaterMillis - previousMillis > rain_period) {
     I2C_rain();
   } 
 #endif 
-  if (millis() - fonaTimer > resetFona * 60000) //Reset fona every (resetFona) minutes
-  {
-    toggleFona(); //turn off Fona
-    delay(5000); // 5 seconds wait please
-    toggleFona(); //turn on Fona
-    fonaTimer = millis(); //reset timer
-  } else
-  {
-    Serial.print(((resetFona * 60000) - (millis() - fonaTimer)) / 1000); Serial.println(" Seconds left before Fona reset");
-  } 
-  
 
   if (millis() - lastSave > minsToSave * 60000) //Save data every (minsToSave) minutes (1 mins)
   {
@@ -400,307 +311,106 @@ if(currentWaterMillis - previousMillis > rain_period) {
     Serial.println(" No Water detected in Pan");
   }
 
-  Serial.print("Finished reading Serial from ISCO. Received "); Serial.print(cdIndex); Serial.println(" characters");
   iscoData[cdIndex] = '\0'; //null out data
   cdIndex = 0;
 
-  Serial.print("Fona onCount = "); Serial.println(getFonaStatus());
 
-  if (getFonaStatus() < 500) //If Fona turns off for some reason,turn it on
-  { // not sure still why this would happen, hopefully Tim has insight.
-    toggleFona();
-  }
 
   if (millis() - textTimer > 100000 && timerOn) //Send last number to text a status on sampling after 100 second delay from sample command
   {
-    /*
-     * if(sender_count > 1)
-     * 
-     * 
-     */
-    // MAKE A MEANS TO HANDLE MULTIPLE SENDERS!
-    sendSampleReply(senderNum);
+    //sendSampleReply(senderNum);
     timerOn = false;
   }
 
-
-
   for (int x = 0; x < 64 ; ++x)
-  {
+  { 
     char a = Serial.read();
-    char b = fonaSerial->read();
+    char b = xbeeSerial->read();
   }
 
   clearIscoSerial();
+  cleararray(iscoData);
 }
 
+void checkHydraProbes(){
 
+
+}
 
 void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
 {
+  int ind = 0;
+  String msg;
+ while (xbeeSerial->available()){
+ msg[ind++]=xbeeSerial->read();
+ }
+ 
+ if (msg == "C1"){
+ 
+ char* batt = getBV(); // call for battery
+ sendSMS(batt);
+ }
 
-  int8_t numSMS = readSMSNum();
-  Serial.print("readSMSNum()="); Serial.println(numSMS);
-  if (numSMS > 0)
-  {
-    Serial.println("Received text Message!");
-    //Serial.print("You have ");Serial.print(numSMS);Serial.println(" text messages");
-    for (int x = 0 ; x < numSMS ; ++x)   //for the number of messages...
-    {
-      int tries = 0;
-      do {                                                         //read the next SMS in (readSMS also processes the commandNum)
-        readSMSSuccess = readSMS(x);                              
-        ++x;
-        Serial.print("Success ="); Serial.println(readSMSSuccess);
-        ++tries;
-      } while (readSMSSuccess == 0  && tries < 30);  
+ if (msg =="C2"){
+  
+ }
+ 
+ if (msg =="C3"){
+  
+ }
+ 
+if (msg =="C4"){
+  
+ }
+ 
+ if (msg =="C5"){
 
-
-      deleteSMSSuccess = deleteSMS(x - 1); //after processing, delete the meesage from the buffer
-
-      if (millis() - deleteTextsTimer > 300000) //if its been 5 minutes, delete every text on the buffer, to make sure it stays clear
-      {
-        for (int y = 0 ; y < 30 ; ++y)
-        {
-          deleteSMS(y);
-        }
-        deleteTextsTimer = millis();
-      }
-
-    }
-    char Message[200];
-    //commandNum parsed from SMS will control how the unit responds to each text
-    if (commandNum == 1)  //Send voltage rail values to senderNum
-    {
-      commandNum = -1;
-      char message[100];
-      int y = sprintf(message, "%s%f%s%f", "Battery Voltage = ", BattVoltage, "\n5V Rail Voltage= ", FiveVoltage);
-      sendSMS(senderNum, message);
-      Serial.println("Sent voltages to Sender");
-    }
-    if (commandNum == 2) //Sample, and start timer to send sample status back to user
-    {
-      commandNum = -1;
-        if (ISCORail) //...and the ISCO is enabled..
-        {
-          toggleSample(); //Sample
-        } else
-        {
-          sendSMS(senderNum, "ISCO is disabled");
-        }
-      
-    }
-     if (commandNum == 3) //Turn ISCO on or off
-    {
-      Serial.println("Toggled ISCO Rail");
-      if (ISCORail)
-      {
-        ISCORail = false;
-        sendSMS(senderNum, "Turned off ISCO");
-      } else
-      {
-        ISCORail = true;
-        sendSMS(senderNum, "Turned on ISCO");
-      }
-
-      commandNum = -1;
-    }
-    if (commandNum == 4) //CHanges the sample mode
-    {
-      Serial.println("Toggled Sample Mode");
-      if (grabSampleMode)
-      {
-        grabSampleMode = false;
-        EEPROM.write(eepromModeAddr, false);
-        sendSMS(senderNum, "Changed to AUTO Sample Mode");
-      } else
-      {
-        grabSampleMode = true;
-        EEPROM.write(eepromModeAddr, true);
-        sendSMS(senderNum, "Changed to GRAB Sample Mode");
-      }
-      commandNum = -1;
-    }
-    if (commandNum == 5) //Change auto sample interval
-    {
-      replybuffer_command = strtok(replybuffer,"_");
-      replybuffer_interval = strtok(NULL,"_");
-      grabSampleInterval = atoi(replybuffer_interval);
-      Serial.print("Changed grab sample interval to ");Serial.print(grabSampleInterval);Serial.println(" minutes");
-      Serial.print("Writing ");Serial.print(grabSampleInterval);Serial.print(" to EEPROM address");Serial.println(eepromIntervalAddr);
-       EEPROM.put(eepromIntervalAddr, grabSampleInterval); //Write new interval to EEPROM
-      sprintf(Message, "%s%i%s", "Changed AUTO Sample Interval \n to ", grabSampleInterval," mins"); //Notify SMS User
-      sendSMS(senderNum, Message);
-    }
-    if (commandNum == 0) //Default message to send back if a command is not received.
-    {
-      sprintf(Message, "%s", "Did not understand the command.\n 1= Rail Voltages \n 2=Sample ISCO");
-      //sprintf(Message, "%s", "\n 5=Hydra3 \n 6=Cheap Sensor \n 7=Turn");
-      /*if (HPRail)
-        {
-        sprintf(Message, "%s%s", Message, " off ");
-        } else
-        {
-        sprintf(Message, "%s%s", Message, " on ");
-        }s
-
-        sprintf(Message, "%s%s", Message, "Hydra Probe \n 8= Turn");
-      */
-      sprintf(Message, "%s%s", Message, "\n 3= Turn");
-      if (ISCORail)
-      {
-        sprintf(Message, "%s%s", Message, " off ");
-      } else
-      {
-        sprintf(Message, "%s%s", Message, " on ");
-      }
-      sprintf(Message, "%s%s", Message, "ISCO \n 4= Change to");
-      if (grabSampleMode)
-      {
-        sprintf(Message, "%s%s", Message, " AUTO ");
-      } else
-      {
-        sprintf(Message, "%s%s", Message, " GRAB ");
-      }
-      sprintf(Message, "%s%s%i%s", Message, "Sample Mode\n 5_X=Change interval from ",grabSampleInterval," to X mins");
-      sendSMS(senderNum, Message);
-      commandNum = -1;
-    }
-    else
-    {
-
-    }
-  } else
-  {
-    Serial.println("No New SMS");
-    commandNum = -1;
-  }
-  commandNum = -1;
+ }
 }
 
 
 
 
-///////////////////////////////***********************FONA FUNCTIONS
-
+///////////////////////////////***********************Xbee FUNCTIONS
 /*** SMS ***/
-int readSMSNum() {  //read in the number of text messages on the buffer and send back
+char* readSMSNum() {  //read in the number of text messages on the buffer and send back
   // read the number of SMS's!
   int smsnum;
   char response[50];
-  flushFonaSerial();
+  flushxbeeSerial();
   //Serial.println("Writing AT Command to Serial 1");
-  fonaSerial->print("AT+CPMS?");
-  fonaSerial->write(13);
   delay(50);
-  while (fonaSerial->available())
+  int index = 0;
+  char num;
+  while (xbeeSerial->available())
   {
-    delay(50);
-    for (int x = 0; x < fonaSerial->available() ; ++x)
-    {
-      char a = fonaSerial->read();
-      response[x] = a;
-    }
+    num = xbeeSerial->read();
+    response[index] = num;
   }
-  Serial.print("Response from Fona -"); Serial.println(response);
-  Serial.print("11th char is "); Serial.println(response[16]);
-  smsnum = response[14] - '0';
-  //Serial.print("to an int ");Serial.println(atoi(response[10]);
-  Serial.print("You have "); Serial.print(smsnum); Serial.println( "messages");
-  sprintf(response, "%s", "");
-  return smsnum;
+  
+    return response;
+  }
 
 
-}
+
 
 int readSMS(int8_t number) { //read the SMS into the replybuffer and parse the command number
   boolean respond = false;
   // read an SMS
   //Serial.print(F("Read #"));
   Serial.print(F("\n\rReading SMS #")); Serial.println(number);  // Retrieve SMS sender address/phone number.
-  if (! fona.getSMSSender(number, replybuffer, 250)) {
-    Serial.println("Failed!");
-    return 0;
-  }
-  Serial.print(F("FROM: ")); Serial.println(replybuffer);
 
-  int y = sprintf(senderNum, "%s", replybuffer);
-  Serial.print("Sender is ");
-  Serial.println(senderNum);  //check sender's number against list of accepted users...
-
-   if (strcmp(senderNum, hawesPhone) == 0)
-  {
-    respond = true;
-  }
-   if (strcmp(senderNum, annesPhone1) == 0)
-  {
-    respond = true;
-  }
-   if (strcmp(senderNum, annesPhone2) == 0)
-  {
-    respond = true;
-  }
-   if (strcmp(senderNum, worthsPhone) == 0)
-  {
-    respond = true;
-  }
-   if (strcmp(senderNum, katherinesPhone) == 0)
-  {
-    respond = true;
-  }
-   if (strcmp(senderNum, googlePhone) == 0)
-  {
-    respond = true;
-  }
-  if (respond) //if the number is recognized, process the SMS and command
-  {
-    Serial.println("Accepted number");
-  // Retrieve SMS value.
-  uint16_t smslen;
-  if (! fona.readSMS(number, replybuffer, 250, &smslen)) { // pass in buffer and max len!
-    Serial.println("Failed!");
-  }
-  Serial.print(F("***** SMS #")); Serial.print(number);
-  Serial.print(" ("); Serial.print(smslen); Serial.println(F(") bytes *****"));
-  Serial.println(replybuffer);
-  commandNum = atoi(replybuffer);
-  Serial.println(F("*****"));
-  return 1;
-}else
-{
-   Serial.println("NOT Accepted number");
-}
 }
 
 int deleteSMS(int8_t number) { //delete the SMS number
-  // delete an SMS
-  //Serial.print(F("Delete #"));
-  Serial.print(F("\n\rDeleting SMS #")); Serial.println(number);
-  if (fona.deleteSMS(number)) {
-    Serial.println(F("OK!"));
-    return 1;
-  } else {
-    Serial.println(F("Couldn't delete"));
-    return 0;
-  }
+ return 1;
 
 }
 
-bool sendSMS(char* sendto, char*message) {
+bool sendSMS(char* message) {
   // send an SMS!
-  Serial.print(F("Send to #"));
-  Serial.println(sendto);
-  Serial.print(F("Message (140 char): "));
-  Serial.println(message);
-  if (!fona.sendSMS(sendto, message)) {
-    Serial.println(F("Failed"));
-    return false;
-  } else {
-    Serial.println(F("Sent!"));
-    return true;
-  }
-
-
+ xbeeSerial->print("C");
+  xbeeSerial->println(message);
 }
 
 uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout) {
@@ -742,13 +452,13 @@ uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout) {
   return buffidx;
 }
 
-bool sendFona(char* message)
+bool sendXbee(char* message)
 {
   char a;
-  flushFonaSerial();
-  fonaSerial->println(message);
-  while (fonaSerial->available())
-    a = fonaSerial->read();
+  flushxbeeSerial();
+  xbeeSerial->println(message);
+  while (xbeeSerial->available())
+    a = xbeeSerial->read();
   if (a == '0' || a == false)
   {
     return false;
@@ -760,9 +470,9 @@ bool sendFona(char* message)
 
 }
 
-void flushFonaSerial() { // read Fona Serial port
-  while (fonaSerial->available())
-    fonaSerial->read();
+void flushxbeeSerial() { // flush xbee Serial port
+  while (xbeeSerial->available())
+    xbeeSerial->flush();
 }
 
 ///////////////////////////////////////**********************FONA FUNCTIONS
@@ -778,7 +488,6 @@ void checkUserInput()
     }
     if (a == 'T')
     {
-      toggleFona();
     }
     if (a == 'Q')
     {
@@ -796,7 +505,7 @@ void checkUserInput()
         Serial.print(getBottleNumber());
         if (getBottleNumber() == 24)
         {
-          sendSMS(senderNum, "All bottles are full. ISCO Sampler must be reset and bottles replaced");
+          sendSMS("All bottles are full. ISCO Sampler must be reset and bottles replaced");
         }
         unsigned long sampled = getSampledTime();
         //Serial.print("time_t=");Serial.println(sampled);
@@ -820,7 +529,7 @@ void toggleSample()
   {
     if (!successTimText)
     {
-      successTimText = sendSMS(hawesPhone, "All bottles are full. ISCO Sampler must be reset and bottles replaced. Will not sample");
+      successTimText = sendSMS("All bottles are full. ISCO Sampler must be reset and bottles replaced. Will not sample");
     }
    }
   {
@@ -841,7 +550,7 @@ void toggleSample()
           successTimText = false;
         }
         sprintf(Message, "%s%i", "Received Sample Command. Now Sampling Bottle # ", botNum);
-        sendSMS(senderNum, Message);
+        sendSMS(Message);
       }
       Sample();
     }
@@ -892,6 +601,13 @@ void sendQuery() //Function to establish comms with ISCO if needed
 
 }
 
+void cleararray(char* a){
+  for (int x =0; x < sizeof(a) / sizeof(a[0]); x++)
+  {
+  a[x] = 0;
+  }
+}
+
 void clearIscoSerial()
 {
   for (int x = 0; x < 64 ; ++x)
@@ -936,7 +652,7 @@ int getBottleNumber() //parse the bottle Number from ISCO input
       int y = sprintf(bottleNumChar, "%c%c", iscoData[x + 2], iscoData[x + 3]);
       bottleNumber = atoi(bottleNumChar);
       Serial.print("Next four characters are"); Serial.print(iscoData[x + 1]); Serial.print(iscoData[x + 2]); Serial.print(iscoData[x + 3]); Serial.println(iscoData[x + 4]);
-      Serial.print("Bottle Number is ");
+      Serial.print("Bottle Number is "); //Your next line will be...
       //Serial.print(bottleNumber);
       //return bottleNumber;
       return bottleNumber;
@@ -984,38 +700,17 @@ unsigned long getSampledTime() //get time time the last bottle was sampled
   return 0;
 }
 
-void sendSampleReply(char*from)
+
+char* getBV()
 {
-  Serial.println("In sample reply");
-  Serial.print("Sampled -- Bottle ");
-  Serial.print(getBottleNumber());
-  unsigned long sampled = getSampledTime();
-  //Serial.print("time_t=");Serial.println(sampled);
-  Serial.print(" @ ");
-  Serial.print(month(sampled)); Serial.print("/"); Serial.print(day(sampled)); Serial.print("/"); Serial.print(year(sampled)); Serial.print("  "); Serial.print(hour(sampled)); Serial.print(":"); Serial.print(minute(sampled)); Serial.print(":"); Serial.println(second(sampled));
-  char message[100];
-  int y = sprintf(message, "%s%i%s%i%s%i%s%i%s%i%s%i%s%i%s", "Sampled bottle ", getBottleNumber(), " @ ", month(sampled), "/", day(sampled), "/", year(sampled), "   ", hour(sampled), ":", minute(sampled), ":", second(sampled),"EST");
-  Serial.print("Sending to "); Serial.println(from);
-  sendSMS(from, message);
-
-}
-
-
-void getBV()
-{
-
-  float bvVoltSplit = analogRead(BattRail_VIN) * (3.3 / 1023);
-  float hpVoltSplit = analogRead(FiveRail_VIN) * (3.3 / 1023);
-  //float ThreeVoltSplit = analogRead(ThreeRail_VIN) * (3.3 / 1023);
-  Serial.print("Raw Batt voltage = "); Serial.println(bvVoltSplit);
-  Serial.print("Raw Hydra voltage = "); Serial.println(hpVoltSplit);
-  //Serial.print("Raw 33 voltage = "); Serial.println(ThreeVoltSplit);
-  //ThreeVoltage = ThreeVoltSplit;
-  BattVoltage = bvVoltSplit * (1000 + 220) / 220; //Resistor Values R1 = 220 , R2 = 1000
-  FiveVoltage = hpVoltSplit * (220 + 220) / 220; //Resistor Values R1 = 220 , R2 = 1000
-  Serial.print("Batt voltage = "); Serial.println(BattVoltage);
-  Serial.print("5V voltage = "); Serial.println(FiveVoltage);
-  //Serial.print("33 voltage = "); Serial.println(ThreeVoltage);
+  /*
+   * int INA = B100;00000; //connect
+     uint8_t INA_I = 0x01;
+     uint8_t INA_V = 0x02;
+   */
+ char* c = "0";
+  return c;
+  
 }
 
 void toggleRQ30()
@@ -1032,17 +727,34 @@ void toggleRQ30()
 }
 
 
-void postData() //post Data to VIPER
+bool getWaterLevel()
 {
-  if (! http.init(*GPRSSerial)) {
-    Serial.println(F("Couldn't find FONA"));
-    Serial.println("Cannot post to VIPER, GPRS on Fona not working");
-    Serial.println("Cannot post to VIPER, GPRS on Fona not working");
-    Serial.println("Cannot post to VIPER, GPRS on Fona not working");
-    Serial.println("Cannot post to VIPER, GPRS on Fona not working");
-    Serial.println("Cannot post to VIPER, GPRS on Fona not working");
+  int reading = 0;
+  int over = 0;
+  int under = 0;
+  for (int x = 0 ; x < 50 ; ++x)
+  {
+    reading = analogRead(levelPin);
+    if (reading > 100)
+    {
+      ++over;
+    } else
+    {
+      ++under;
+    }
+  }
+  if (over + 20 > under) //bias towards failing dry
+  {
+    return false;
   } else
   {
+    return true;
+  }
+
+}
+
+void postData() //post Data to VIPER
+{
     int intWL;
     if (getWaterLevel()) //Transpose the water level to 50 (wet) or 0 (dry) for viewing on VIPER
     {
@@ -1053,154 +765,11 @@ void postData() //post Data to VIPER
       intWL = 0;
       levelReading = 0;
     }
-    char allData[1000];
-          char str_values[10];
-          char postS[500];
-          char tempS[100];
-         static char ident[25];
-          char sourceS[30];
-          char footer[30];
-          char header[500];
-    //add any other values you want sent to VIPER with one of the commands below 
     http.addInt("Bottle Number", getBottleNumber(), "/24");
     http.addFloat("Battery Voltage", BattVoltage, "V");
     http.addInt("Level Reading", intWL, " 0/50");
 
-
-    
-    int unit = 1;
-    char* GPS = "0,0 0";
-   char* body = http.build_body(unit, GPS); // call this line after you add all data you want for the VIPER post
-   
-    //client.sendAll(unit, GPS);  //NEED TO REPLACE THIS WITH YOUR HTTP START, OPEN, SEND, CLOSE!
-    http.start_HTTP();
-char post[] =  "POST /CAP/post HTTP/1.1\n";
-char host[] = "https://viper.response.epa.gov/CAP/post\n";
-char connection[] = "Connection: Keep-Alive\n";
-char authorization[] = "Y29sbGllci5qYW1lc0BlcGEuZ292OldldGJvYXJkdGVhbTEh"; //encoded my username and password in base 64
-char port[] = "443";
-
-//char post_total* = http.build_POST(host,authorization,body);
-http.Open_HTTP(host,port);
-http.Send_HTTP(http.build_POST(host,authorization,body));
-http.Close_HTTP();
-/*
-
-    https://github.com/adafruit/Adafruit_FONA/pull/81/commits/0332448e79a18ad206cb6e80d23a6d739e62940c 
-    Combined this links code with Ubidots build setup for Posting
-   
- HardwareSerial *fonaSerial = &Serial1;
-    if (! fona.begin(*fonaSerial)) {
-    Serial.println(F("Couldn't find FONA"));
-    while (1);
-  }
-turn HTTPS Stack on
-HTTPS_VIPER http = HTTPS_VIPER(/*FONA_RST);
-http.init(*fonaSerial);
-  // turn GPRS on
- // if (!fona.enableGPRS(true))
- //   Serial.println(F("Failed to turn on the 3G GPRS module"));
-//  else
-//    Serial.println(F("We have turned on the GPRS Function for the 3G FONA module"));
-    
-  http.start_HTTP();
- Serial.println(http.is_error());
- 
-char post[] =  "POST /CAP/post HTTP/1.1\n";
-char host[] = "https://viper.response.epa.gov/CAP/post\n";
-char connection[] = "Connection: Keep-Alive\n";
-char authorization[] = "Y29sbGllci5qYW1lc0BlcGEuZ292OldldGJvYXJkdGVhbTEh"; //encoded my username and password in base 64
-char port[] = "443";
-char xml[1000];
-char http_header[300];
-
-char* totalpost;
- char allData[1000];
-          char str_values[10];
-          char postS[500];
-          char tempS[100];
-         static char ident[25];
-          char sourceS[30];
-          char footer[30];
-          char header[500];
-           
-
-int unit = 1;
-         int count;
-        sprintf(ident,"%i",identnum);
-          ++identnum;
-        sprintf(sourceS, "%s%i%s", "EPA-WET-BOARD ",unit, ",0,0");  // Can change the zeros to increment in a cascading format to add more devices                                                                         
-        sprintf(postS, "%s%s%s%s%s%s%s%s%s", "<identifier>", ident, "</identifier>",  "<source>", sourceS, "</source>", "<info><area><circle>",0/*GPS, "</circle></area><headline>");
-        sprintf(header,"%s","<?xml version=\"1.0\" encoding=\"utf-8\"?><alert xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"urn:oasis:names:tc:emergency:cap:1.1\">");
-        sprintf(footer,"%s","</headline></info></alert>");
-        count = sprintf(allData,"%s%s%s",header,postS,footer);
-        char content_length[30];
-        sprintf(content_length,"Content-length: %s\r", count);
-        sprintf(http_header, "%s%s%s%s%s", post,host,connection,authorization,content_length);
-        Serial.println("H");
-       totalpost = http.build_POST(host,authorization,allData);
-        Serial.println("H0");
-        delay(1);
-        http.Open_HTTP(host,port);
-         Serial.println("H1");
-        Serial.println(http.is_error());
-        delay(10);
-        http.Send_HTTP(totalpost);
-          Serial.println("H2");
-         Serial.println(http.is_error());
-        
-    
-        *  How to use sprintf to build a string 
-        *  Buffer is an array
-        *  n=sprintf (buffer, "%d plus %d is %d", a, b, a+b);
-        *  where a and b are integers
-        *  n stores how long the string is
-*/        
-
-
-  
-    http.clearData();
-    Serial.println("Reached end of postData");
-     }
 }
-
-int getFonaStatus()
-{
-
-  int onCount = 0;
-  int z = 0;
-
-  for (z; z < 1000; ++z)
-  {
-    if (analogRead(FONA_PS) > 500)
-    {
-      ++onCount;
-    }
-    delay(1);
-  }
-  return onCount;
-}
-
-void toggleFona() {
-  digitalWrite(FONA_RI_BYPASS, HIGH);
-  if (fonaPower)
-  {
-    digitalWrite(FONA_PKEY, LOW); //turn off Fona
-    delay(5000);
-    digitalWrite(FONA_PKEY, HIGH); //turn off Fona
-    fonaPower = false;
-    Serial.println("Turned off Fona");
-  } else
-  {
-    digitalWrite(FONA_PKEY, LOW); //turn on Fona
-    delay(5000);
-    digitalWrite(FONA_PKEY, HIGH); //turn on Fona
-    fonaPower = true;
-    Serial.println("Turned on Fona");
-  }
-
-}
-
 
 void printDigits(int digits) {
   // utility function for digital clock display: prints preceding colon and leading 0
@@ -1363,33 +932,7 @@ unsigned long processSyncMessage() {
   return pctime;
 }
 
-bool getWaterLevel()
-{
-  int reading = 0;
-  int over = 0;
-  int under = 0;
-  for (int x = 0 ; x < 50 ; ++x)
-  {
-    reading = analogRead(levelPin);
-    //Serial.print("Reading --- ");
-    //Serial.println(reading);
-    if (reading > 100)
-    {
-      ++over;
-    } else
-    {
-      ++under;
-    }
-  }
-  if (over + 20 > under) //bias towards failing dry
-  {
-    return false;
-  } else
-  {
-    return true;
-  }
 
-}
 
 float getWaterIntensity() //parse the bottle Number from ISCO input
 {
@@ -1463,28 +1006,6 @@ time_t compileTime()
     tm.Second = atoi(compTime + 6);
     time_t t = makeTime(tm);
     return t + FUDGE;           // add fudge factor to allow for compile time
-}
-/*
- * FonaPOST posts ISCO data to the Viper Server
- * Check if FONA time is ready 
- *  Check Conenction to IP/HTTP Session
- *  Post an HTTPS push to the VIPER server
- *  AccountID: ord-boss@viper.ert.org
- *  POST URL: https://viper.response.epa.gov/cap/post
- */
-void IntPOST(char* type,int val, char* units){
-/* 
- *  
- */
- 
-}
-void StringPOST(char* type,char* string, char* units){
-
-  
-}
-void FloatPOST(char* type,float val, char* units){
-
-
 }
 
 void INA_read(){
