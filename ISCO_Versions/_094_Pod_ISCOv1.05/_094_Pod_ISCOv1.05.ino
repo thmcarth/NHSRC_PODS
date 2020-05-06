@@ -118,6 +118,7 @@ char replybuffer[255]; //holds Fonas text reply
 char * replybuffer_command; //holds Fonas command part
 char * replybuffer_interval; //holds Fonas interval part
 HardwareSerial *xbeeSerial = &Serial5;
+HardwareSerial *parsivelSerial = & Serial1;
 int commandNum = -1; //integer value for which text command has been sent
 unsigned long lastPost = millis();
 int minsToPost = 5;
@@ -179,10 +180,10 @@ bool RQ30 = true;
 #define RQ30Relay 26 //Output PIN to control RQ30 12V Rail
 unsigned long fonaTimer = millis(); //timer to reset Fona
 //////////////////////////RELAYS
-
+Adafruit_INA260 ina260 = Adafruit_INA260();
 
 void setup() {
-  Adafruit_INA260 ina260 = Adafruit_INA260();
+  
   Serial.begin(9600);
   int countdownMS = Watchdog.enable(300000); //300 seconds or 5 minutes watchdog timer
   Serial.print("Enabled the watchdog with max countdown of ");
@@ -215,7 +216,7 @@ void setup() {
   EEPROM.get(eepromModeAddr, grabSampleMode); //Get Sampling mode from EEPROM
   EEPROM.get(eepromIntervalAddr, grabSampleInterval); //Get sampleInterval from EEPROM
   Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println("minutes");
-  //xbeeSerial->begin(19200); //Startup SMS and Cell client
+  xbeeSerial->begin(9600); //Startup SMS and Cell client
   
   pinMode(IscoSamplePin, OUTPUT);  // Setup sample pin output
   digitalWrite(IscoSamplePin, LOW);
@@ -332,6 +333,28 @@ if(currentWaterMillis - previousMillis > rain_period) {
   cleararray(iscoData);
 }
 
+void setup_parsivel() { // Tells the Parsivel through serial message how we want to get the telegram data from it
+  //refer to OneDrive in Parsivel2-->Terminal Commands Pdf.
+  String interval = "60"; // This is how often we want to receive data from the parsivel
+  
+  String request_data = "CS/M/S/%19,/%01,/%02,/%60,/%34,/%18,/%93/r/n";// this asks for date/time, intensity, rain accumulated, particles detected, 
+  // kinetic energy, and raw data (in this order)
+  String interval_send = "CS/I/"+interval;
+  String enable_msg = "CS/M/M/1";
+  parsivelSerial->print(request_data);
+  delay(1000);
+  parsivelSerial->print(interval_send);
+  delay(1000);
+  parsivelSerial->print(enable_msg);
+  delay(500);
+}
+
+void read_parsivel(){
+  if (parsivelSerial->available()){
+   parsivelSerial->print(request_data);
+  
+  }
+}
 void checkHydraProbes(){
 
 
@@ -341,13 +364,15 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
 {
   int ind = 0;
   String msg;
+  String return_msg;
  while (xbeeSerial->available()){
  msg[ind++]=xbeeSerial->read();
  }
- 
+ // may need to add \0 later
  if (msg == "C1"){
  
- char* batt = getBV(); // call for battery
+ String batt = getBVs(); // call for battery
+ return_msg = batt;
  sendSMS(batt);
  }
 
@@ -359,9 +384,11 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  if (ISCORail)
       {
         ISCORail = false;  
+        return_msg = "turned off";
       } else
       {
         ISCORail = true;
+        return_msg = "turned on";
       }
  }
  
@@ -370,18 +397,25 @@ if (msg =="C4"){
       {
         grabSampleMode = false;
         EEPROM.write(eepromModeAddr, false);
+         return_msg = "grab sample now off";
      
       } else
       {
         grabSampleMode = true;
         EEPROM.write(eepromModeAddr, true);
+        return_msg = "grab sample now on";
       }
  }
  
- if (msg =="C5"){
-
+ if (msg.substring(0,3)=="C5_"){
+   int new_time = 0;
+   new_time = msg.substring(4).toInt();
+   grabSampleInterval = new_time;
+   EEPROM.put(eepromIntervalAddr, grabSampleInterval);
+   return_msg = "new sampling time is: " + new_time; 
  }
 }
+
 
 
 
@@ -422,7 +456,7 @@ int deleteSMS(int8_t number) { //delete the SMS number
 
 }
 
-bool sendSMS(char* message) {
+bool sendSMS(String message) {
   // send an SMS!
  xbeeSerial->print("C");
   xbeeSerial->println(message);
@@ -716,14 +750,22 @@ unsigned long getSampledTime() //get time time the last bottle was sampled
 }
 
 
-char* getBV()
+String getBVs()
 {
   /*
    * int INA = B100;00000; //connect
      uint8_t INA_I = 0x01;
      uint8_t INA_V = 0x02;
    */
- char* c = "0";
+String c = "0";
+  return c;
+  
+}
+
+float getBV()
+{
+float c = 0.0;
+c = ina260.readBusVoltage();
   return c;
   
 }
@@ -781,8 +823,9 @@ void postData() //post Data to VIPER
       levelReading = 0;
     }
     http.addInt("Bottle Number", getBottleNumber(), "/24");
-    http.addFloat("Battery Voltage", BattVoltage, "V");
+    http.addFloat("Battery Voltage", getBV(), "V");
     http.addInt("Level Reading", intWL, " 0/50");
+    xbeeSerial->println(http.getData());
 
 }
 
