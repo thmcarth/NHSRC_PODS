@@ -118,7 +118,7 @@ char replybuffer[255]; //holds Fonas text reply
 char * replybuffer_command; //holds Fonas command part
 char * replybuffer_interval; //holds Fonas interval part
 HardwareSerial *xbeeSerial = &Serial5;
-HardwareSerial *parsivelSerial = & Serial1;
+HardwareSerial *parsivelSerial = &Serial1;
 int commandNum = -1; //integer value for which text command has been sent
 unsigned long lastPost = millis();
 int minsToPost = 5;
@@ -351,7 +351,7 @@ void setup_parsivel() { // Tells the Parsivel through serial message how we want
 
 void read_parsivel(){
   if (parsivelSerial->available()){
-   parsivelSerial->print(request_data);
+   parsivelSerial->read();
   
   }
 }
