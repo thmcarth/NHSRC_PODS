@@ -145,11 +145,60 @@ Connection: Keep-Alive
 This ^^ is all the body
 '''
 
-uart = UART(1, 115200)
+uart = UART(1, 9600)
 data = 0
 sms = 0
 ident = 0
 t = 0
+'''
+char* hawesPhone = "+12524126262";
+//Numbers to accept SMS commands from:
+char* annesPhone1 = "+19198860812";
+char* annesPhone2 = "+15179451531";
+char* katherinesPhone = "+16157148918";
+char* worthsPhone = "+19194233837";
+char* googlePhone = "+19192301472";
+char* garrettPhone = "+19196019412";
+'''
+allowed_number =[12524126262,19198860812,15179451531,16157148918,19194233837,19192301472,19196019412]
+
+def time_counter(seconds):
+    """Pauses program for a user-specified time.
+
+    Parameters
+    ----------
+    seconds : int
+        number of seconds to pause program
+
+    Returns
+    -------
+    ``None``
+    """
+    start = time.time()
+    elapsed = 0
+    while elapsed < seconds:
+        elapsed = time.time() - start
+    #    print('done counting!')
+    return None
+
+
+def check_number(number, allowed):
+    """Checks to see if a number is in allowed list.
+
+    Parameters
+    ----------
+    number : number to check
+    allowed : list of allowed numbers
+
+    Returns
+    -------
+    boolean
+        `True` if number is in allowed list. Otherwise, `False`
+    """
+    ok_num = 0
+    if number in allowed:
+        ok_num = 1
+    return ok_num
 
 def create_time(array):
     # (year, month, day, hour, second, day of week , day of year)
@@ -178,11 +227,11 @@ def read_serial():
             t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
             t = create_time(t)
             ident = ident + 1
-            ssend(serial,ident,time)
-
+            ssend(serial, ident, time)
+            return 0
         elif types is 2: # send to users
             serial = serial[1:]
-            send_text(serial)
+            return serial
     else:
         return 0
 
@@ -320,6 +369,7 @@ def ssend(body,ident,time):
 i2c = I2C(1, freq=400000)  # I2c Module
 c = network.Cellular()
 def command_read(comm):
+    comm = comm[0]
     switcher = {
         1: "C1",
         2: "C2",
@@ -340,15 +390,27 @@ def i2c_read():
 def check_txt():
     if c.isconnected():
         sms = c.sms_receive()
+        first_char = (sms['message'][0])
+
         if sms:
-            if command_read(sms['message']) is "Invalid command":
-                return 0
-            else:
-                return sms['message'],sms
+            if check_number(sms['sender'], allowed_number):
+
+                txt = command_read(sms['message'])
+                if command_read(sms['message']) is "Invalid command":
+                    return 0
+                if first_char is "5":
+                    return sms['message'], sms
+                else:
+                    return sms['message'], sms
+
 
 def create_msg(msg):
     msg = "C" + msg
     return msg
+
+
+def change_time(string):
+    string = "5_" + string
 
 
 def send_text(msg,sms):
@@ -357,14 +419,13 @@ def send_text(msg,sms):
 
 while True:
     serial_type = 0
-    msg,sms = check_txt()  # check for text*
+    msg, sms = check_txt()  # check for text*
     if msg is not 0:
         msg = create_msg(msg)
         send_serial(msg)  # if true: interface with Teensy and send Teensy C#
 
-    read_serial()
-
-    # if true: interface with Teensy and send Teensy C#
-    # check timer for VIPER POST
+    read = read_serial()
+    if read is not 0:
+        send_text(read, sms)
 
     time.sleep(5)
