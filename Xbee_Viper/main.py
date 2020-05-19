@@ -12,6 +12,7 @@ import time
 from machine import I2C
 import usocket
 import network
+
 '''
 Commands we are going to send/receive to TEENSY
 
@@ -88,7 +89,6 @@ print("Socket closed.")
 
 '''
 
-
 '''
 THESE ARE THE PHONE NUMBER WE ACCEPT!
 char* hawesPhone = "+12524126262";  
@@ -160,7 +160,8 @@ char* worthsPhone = "+19194233837";
 char* googlePhone = "+19192301472";
 char* garrettPhone = "+19196019412";
 '''
-allowed_number =[12524126262,19198860812,15179451531,16157148918,19194233837,19192301472,19196019412]
+allowed_number = [12524126262, 19198860812, 15179451531, 16157148918, 19194233837, 19192301472, 19196019412]
+
 
 def time_counter(seconds):
     """Pauses program for a user-specified time.
@@ -200,6 +201,7 @@ def check_number(number, allowed):
         ok_num = 1
     return ok_num
 
+
 def create_time(array):
     # (year, month, day, hour, second, day of week , day of year)
     # 2011-08-19T15:31:08-04:00 is style we want to create
@@ -207,10 +209,12 @@ def create_time(array):
     month = array[1]
     day = array[2]
     hour = array[3]
-    second = array[4]
+    seconds = array[4]
+    minutes = seconds/60
     yearday = array[6]
-    total_time = ""+year + "-" + month + "-" + day + "T" + hour
+    total_time = "" + year + "-" + month + "-" + day + "T" + hour + " " + minutes + " " + seconds
     return total_time
+
 
 def read_serial():
     global data
@@ -222,19 +226,18 @@ def read_serial():
         types = check_serial_type(serial)
         if types is 0:
             return 0
-        elif types is 1: # post to viper
+        elif types is 1:  # post to viper
             serial = serial[1:]
             t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
             t = create_time(t)
             ident = ident + 1
             ssend(serial, ident, time)
             return 0
-        elif types is 2: # send to users
+        elif types is 2:  # send to users
             serial = serial[1:]
             return serial
     else:
         return 0
-
 
 
 def send_serial(message):
@@ -243,13 +246,14 @@ def send_serial(message):
 
 def check_serial_type(msg):
     if msg:
-        first = msg[0:1]
+        first = msg[0]
         first = first.lower()
         switcher = {
             "p": 1,
             "c": 2
         }
         return switcher.get(first, 0)
+
 
 '''
 HTTP example
@@ -308,7 +312,7 @@ def http_post(host, body):
         s.close()
 
 
-def http_test(post,date,ident):
+def http_test(post, date, ident):
     st = socket.socket()
     try:
         st.connect(("https://viper.response.epa.gov/CAP/post", 443))
@@ -319,34 +323,34 @@ def http_test(post,date,ident):
                      '<alert xmlns: xsi = "http://www.w3.org/2001/XMLSchema-instance"'
                      'xmlns: xsd = "http://www.w3.org/2001/XMLSchema"'
                      'xmlns = "urn:oasis:names:tc:emergency:cap:1.1">'
-                     '<identifier> '+ident+' </identifier '
-                     '<sender> EPA_WET_BOARD </sender>'
-                     '<sent>'+ date + '</sent>>'
-                     '<source>Acme Particulate Monitor,APM S/N 123456,0,0</source>'
-                     '<info>'
-                     '<headline> '+ post +'</headline>'
-                     '<area>'
-                     '<circle>38.904722, -77.016389 0</circle>'
-                     '</area>'
-                     '</info>'
-                     '</alert>\r\n\r\n')
+                     '<identifier> ' + ident + ' </identifier '
+                                               '<sender> EPA_WET_BOARD </sender>'
+                                               '<sent>' + date + '</sent>>'
+                                                                 '<source>Acme Particulate Monitor,APM S/N 123456,0,0</source>'
+                                                                 '<info>'
+                                                                 '<headline> ' + post + '</headline>'
+                                                                                        '<area>'
+                                                                                        '<circle>38.904722, -77.016389 0</circle>'
+                                                                                        '</area>'
+                                                                                        '</info>'
+                                                                                        '</alert>\r\n\r\n')
         st.send(post)
     finally:
         st.close()
 
 
-def ssend(body,ident,time):
+def ssend(body, ident, time):
     print("\n Starting Response \n")
     post = bytes('<?xml version="1.0" encoding="utf-8"?>\n'
                  '<alert xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
                  'xmlns:xsd="http://www.w3.org/2001/XMLSchema"\n'
                  'xmlns="urn:oasis:names:tc:emergency:cap:1.1">\n'
-                 '<identifier>'+ident+'</identifier>\n'
+                 '<identifier>' + ident + '</identifier>\n'
                  '<sender>EPA_WET_BOARD</sender>\n'
-                 '<sent>'+time+'</sent>\n'
+                 '<sent>' + time + '</sent>\n'
                  '<source>Acme Particulate Monitor,APM S/N 123456,0,0</source>\n'
                  '<info>\n'
-                 '<headline>'+body+'</headline>\n'
+                 '<headline>' + body + '</headline>\n'
                  '<area>\n'
                  '<circle>38.904722, -77.016389 0</circle>\n'
                  '</area>\n'
@@ -366,8 +370,11 @@ def ssend(body,ident,time):
     socketObject.close()
     print("Socket closed.")
 
+
 i2c = I2C(1, freq=400000)  # I2c Module
 c = network.Cellular()
+
+
 def command_read(comm):
     comm = comm[0]
     switcher = {
@@ -413,17 +420,18 @@ def change_time(string):
     string = "5_" + string
 
 
-def send_text(msg,sms):
+def send_text(msg, sms):
     c.sms_send(sms['sender'], msg)
 
 
 while True:
     serial_type = 0
-    msg, sms = check_txt()  # check for text*
+    msg, sms = check_txt()  # check for text* see if it is a message
     if msg is not 0:
         msg = create_msg(msg)
         send_serial(msg)  # if true: interface with Teensy and send Teensy C#
-
+    else:
+        send_text("Invalid Command", sms)
     read = read_serial()
     if read is not 0:
         send_text(read, sms)
