@@ -54,7 +54,9 @@ Timezone myTZ(myDST, mySTD);
 #include <EEPROM.h>
 int eepromModeAddr = 0;
 int eepromIntervalAddr = 1;
-
+int eepromfirst_upload = 2;
+int is_first = 0;
+#define FIRST 1
 //////////////////////////////////////////////
 
 //Char arrays to hold time information
@@ -90,8 +92,8 @@ int deleteSMSSuccess = 0;
 int sender_count = 0;
 /////////////////////////
 
-/////////////////////////INA 260 CODE 
-
+/////////////////////////Parsivel data 
+String parsivel_data;
 /////////////////////////
 
 //DAVIS RAINBUCKET
@@ -101,7 +103,7 @@ int sender_count = 0;
 int Intensity_period = 30; // Intensity period and how often we want to ask device for rainfall intensity.
 unsigned long UpdateRate = 4000; //Number of ms between serial prints, 4 seconds by default
 uint8_t ADR = 0x08; //Address of slave device, 0x08 by default
-long rain_period = Intensity_period;
+long rain_period = 30000;
 long previousMillis = 0; 
 
 //INA260 comms
@@ -161,7 +163,7 @@ unsigned long lastSave = millis();  // holds time since execution of last save t
 char iscoData[500];
 int cdIndex = 0;
 bool grabSampleMode;
-int grabSampleInterval; //Minute interval to auto grab sample as long as water level is high enough
+int grabSampleInterval = 2 ; //Minute interval to auto grab sample as long as water level is high enough
 char iscoTime[15]; //holds last bottle sample time from ISCO memory
 #define iscoSerial Serial4
 bool timerOn = false;//logic for texting after sample is complete
@@ -183,18 +185,15 @@ unsigned long fonaTimer = millis(); //timer to reset Fona
 Adafruit_INA260 ina260 = Adafruit_INA260();
 
 void setup() {
-  
   Serial.begin(9600);
   int countdownMS = Watchdog.enable(300000); //300 seconds or 5 minutes watchdog timer
   Serial.print("Enabled the watchdog with max countdown of ");
   Serial.print(countdownMS, DEC);
   Serial.println(" milliseconds!");
   Serial.println();
-
 // SETUP DST
     setTime(myTZ.toUTC(compileTime()));
 //
- 
   delay(2000);
   setSyncProvider(getTeensy3Time);
   Serial.print("Initializing SD card...");  //startup SD card
@@ -213,8 +212,24 @@ void setup() {
   pinMode(BattRail_VIN, INPUT);
   digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
   Watchdog.reset();
+
+  
+  #if FIRST  //change FIRST to 1 when uploading and running first time
+  EEPROM.write(eepromfirst_upload, 0);
+  is_first = 1;
+  #endif
+ if (!is_first)
+ EEPROM.get(eepromfirst_upload, is_first);
+ 
+  if(!is_first)
+  { // if not fresh upload, take old values
   EEPROM.get(eepromModeAddr, grabSampleMode); //Get Sampling mode from EEPROM
   EEPROM.get(eepromIntervalAddr, grabSampleInterval); //Get sampleInterval from EEPROM
+  }
+  else {
+    grabSampleMode = false;
+    grabSampleInterval = 1;
+  }
   Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println("minutes");
   xbeeSerial->begin(9600); //Startup SMS and Cell client
   
@@ -247,6 +262,7 @@ void loop() {
   checkHydraProbes();
   checkUserInput(); //check Serial for input commands
   getBV(); //get voltage rail readings
+  read_parsivel();
   if (millis() - lastPost > minsToPost * 60000) //Post data every (minsToPost) minutes
   { // at the moment we post every 1 minute
     postData();
@@ -323,11 +339,11 @@ if(currentWaterMillis - previousMillis > rain_period) {
     timerOn = false;
   }
 
-  for (int x = 0; x < 64 ; ++x)
+/*  for (int x = 0; x < 64 ; ++x)
   { 
     char a = Serial.read();
     char b = xbeeSerial->read();
-  }
+  } */
 
   clearIscoSerial();
   cleararray(iscoData);
@@ -350,10 +366,12 @@ void setup_parsivel() { // Tells the Parsivel through serial message how we want
 }
 
 void read_parsivel(){
-  if (parsivelSerial->available()){
-   parsivelSerial->read();
-  
+  String message = "";
+  int i = 0;
+  while (parsivelSerial->available()){
+   message = ""+ message + parsivelSerial->read()+ "";
   }
+  parsivel_data = message;
 }
 void checkHydraProbes(){
 
@@ -826,6 +844,7 @@ void postData() //post Data to VIPER
     http.addFloat("Battery Voltage", getBV(), "V");
     http.addInt("Level Reading", intWL, " 0/50");
     xbeeSerial->println(http.getData());
+   // xbeeSerial->println("P"http.getData());  //backup solution
 
 }
 
@@ -908,7 +927,10 @@ void saveData() {
     myFile.print(levelChar);
     myFile.print(",");
     myFile.print(bVChar);
+    myFile.print(",");
+    myFile.print(parsivel_data);
     myFile.println(" ");
+    
     // close the file:
     myFile.close();
     Serial.println("done.");
