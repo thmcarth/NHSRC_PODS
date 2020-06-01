@@ -382,7 +382,9 @@ def command_read(comm):
         2: "C2",
         3: "C3",
         4: "C4",
-        5: "C5"
+        5: "C5",
+        6: "C6", # change VIPER POSTING to 30 seconds
+        7: "C7"  # change VIPER POSTING to 5 Minutes
     }
     return switcher.get(comm, "Invalid command")
 
