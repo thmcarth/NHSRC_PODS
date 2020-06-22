@@ -1,5 +1,4 @@
 #include <Adafruit_INA260.h>
-
 #include <HTTPS_VIPER.h>
 //#include <Adafruit_FONA.h>
 #include <Timezone.h>
@@ -102,12 +101,14 @@ long rain_period = 30000;
 long previousMillis = 0; 
 int rain_level = 0; //0 is no rain, 1 is little, 2 is some, 3 is lots of rain 
 int droplet_pin = 10;
-//INA260 comms
-int INA = B10000000; //connect
-uint8_t INA_I = 0x01;
-uint8_t INA_V = 0x02;
+//INA260 comms Placeholder
 //////////////END I2C Inits
 
+
+//Hydraprobes
+#define HydraSerial Serial3
+String moisture;
+//
 //FONA HTTP
 HTTPS_VIPER http = HTTPS_VIPER(); 
 char senderNum[30];    //holds number of last number to text SIM
@@ -395,8 +396,15 @@ for ( i = 0; i < len; i++)
 }
 
 void checkHydraProbes(){
-
-
+// Serial Println style commands here: over the Serial Port we will need: commands /r/n
+HydraSerial.println("AAATR");
+//char reading[100]; 
+//int i = 0;
+String values="";
+while (HydraSerial.available()){
+ values += HydraSerial.readString();
+}
+moisture = values;
 }
 
 void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
@@ -1118,26 +1126,6 @@ time_t compileTime()
     return t + FUDGE;           // add fudge factor to allow for compile time
 }
 
-void INA_read(){
-/*
- * 
-//INA260 comms
-int INA = B10000000; //connect
-uint8_t INA_I = 0x01;
-uint8_t INA_V = 0x02;
-
-All data bytes are transmitted most significant byte first.
- */
-   uint8_t Byte1 = 0; //Bytes to read then concatonate
-  uint8_t Byte2 = 0;
-   int * address = INA;
-   double divisor = 800.0;
-  Wire.beginTransmission(INA);
-  Wire.write(INA);
-  delay(1);
-  Wire.write(INA_I);
-
-}
 #if DAVIS 
 void droplet_read(){
   if(analogRead(droplet_pin)<300) rain_level = 3;
@@ -1171,3 +1159,12 @@ void I2C_rain(){
   }
 }
 #endif
+
+
+
+
+
+
+
+
+
