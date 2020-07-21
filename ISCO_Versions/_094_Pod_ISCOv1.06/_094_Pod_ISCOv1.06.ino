@@ -418,7 +418,7 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  // may need to add \0 later
  if (msg == "C1"){
  
- String batt = getBVs(); // call for battery
+ String batt = getBV(); // call for battery
  return_msg = batt;
  sendSMS(batt);
  }
@@ -1159,12 +1159,3 @@ void I2C_rain(){
   }
 }
 #endif
-
-
-
-
-
-
-
-
-
