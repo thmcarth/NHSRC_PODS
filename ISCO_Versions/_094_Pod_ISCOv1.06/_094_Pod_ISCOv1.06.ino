@@ -112,7 +112,6 @@ String moisture;
 //FONA HTTP
 HTTPS_VIPER http = HTTPS_VIPER(); 
 char senderNum[30];    //holds number of last number to text SIM
-
 char replybuffer[255]; //holds Fonas text reply
 char * replybuffer_command; //holds Fonas command part
 char * replybuffer_interval; //holds Fonas interval part
@@ -175,6 +174,7 @@ unsigned long iscoTimeout = millis();
 ///////////////////////////RELAYS
 bool RQ30 = true;
 //Soil moisture is on pin 30
+#define HPdata 30
 #define HPRelay 27 //Outpin PIN to control HydraProbe 12V Rail
 #define RQ30Relay 26 //Output PIN to control RQ30 12V Rail
 unsigned long fonaTimer = millis(); //timer to reset Fona
