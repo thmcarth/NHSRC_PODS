@@ -9,18 +9,25 @@
 
 #include <SoftwareSerial.h>
 
-#define txPin 10
+#define txPin 30
 #define rxPin 11
 #define INVERTED true          //SDI-12 uses inverted logic
-
+#define HPRelay 27 //Outpin PIN to control HydraProbe 12V Rail
+String change_addr = "Ab!";
+String serial_ID = "0I!";
+String Reading_0 = "0M!";
 SoftwareSerial sdiAnem(rxPin, txPin, INVERTED);
+
 
 void setup()
 {
 // communication with PC
-Serial.begin(115200);
+Serial.begin(9600);
 Serial.println("\nSDI-12 0.01");
-
+pinMode(HPRelay, OUTPUT); //Set up HydraProbe relay
+delay (50);
+digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
+delay(15);
 // software serial for the sensor
 sdiAnem.begin(1200);
 
@@ -29,16 +36,14 @@ digitalWrite(txPin, HIGH);
 delay(13);
 digitalWrite(txPin, LOW);
 delay(9);
-sdiAnem.write("0XXU,A=0,M=R,C=1,B=1200,D=7,P=E,S=1!");
-Serial.println("0XXU,A=0,M=R,C=1,B=1200,D7,P=E,S=1!");
+
 
 delay(9);
 digitalWrite(txPin, HIGH);
 delay(13);
 digitalWrite(txPin, LOW);
 delay(9);
-sdiAnem.write("0XWU,R=01001100&01001100,I=10,A=60,G=3,U=N,D=0,N=W,F=4!");
-Serial.println("0XWU,R=01001100&01001100,I=10,A=60,G=3,U=N,D=0,N=W,F=4!");
+
 
 char incomingAnswer[80];
 char a;
@@ -48,6 +53,7 @@ digitalWrite(txPin, HIGH);
 delay(13);
 digitalWrite(txPin, LOW);
 delay(9);
+Serial.println("H");
 sdiAnem.write("0SU!");
   if (sdiAnem.available() > 0)
   {
@@ -63,22 +69,26 @@ Serial.println(incomingAnswer);
 
 void loop()
 {
+  while(Serial.available() ==0);
+  char commands = Serial.read();
 char *answer;
-
+if (commands == 'a'){
 answer = addressQuery(); // char, no string
 Serial.print("\n addressQuery: ");
 Serial.println(answer);
-
+}
+else if (commands == 'b'){
 AcknowledgeActive('0'); // char, no string
 Serial.print("\n Address: ");
 Serial.println(answer);
-
+}
+else if (commands == 'c'){
 sendIdentification('0'); // char, no string
 Serial.print("\n id: ");
 Serial.println(answer);
-
-int t = 0;
-int n = 0;
+}
+//int t = 0;
+//int n = 0;
 
 /* startMeasurement('0', &t, &n);
 Serial.print("\n startMeasurement: ");
@@ -88,11 +98,16 @@ Serial.println(n, DEC);
 
 delay(t*1000UL); // wait for the measurement to be ready
 */
+else if (commands == 'd'){
 sendData('0');
 Serial.print("\n sendData: ");
 Serial.println(answer);
+}
+else{
+Serial.println("No Command");  
+  }
 
-delay(20000UL);
+delay(10000);
 }
 
 /////////////////////////////////////////////////////////
@@ -123,6 +138,7 @@ return response;
 
 char* addressQuery()
 {
+  Serial.print("H-add");
 char command[] = "?!";
 request(2, command, response);
 return response;
@@ -182,11 +198,14 @@ return response;
 void request(uint8_t length, char *command, char *response)
 {
 // send command
-delay(9);
+Serial.println("request");
+/*delay(9);
 digitalWrite(txPin, HIGH);
 delay(13);
 digitalWrite(txPin, LOW);
 delay(9);
+*/
+Serial.println("index");
 for (int idx=0; idx<length; idx++)
 {
   sdiAnem.write(command[idx]);
@@ -197,6 +216,7 @@ char c = ' ';
 int idx = 0;
 while (c != 10)  // answer ends with LineFeed = char 10
 {
+  Serial.println("reading SDI bus");
   if (sdiAnem.available() > 0)
   {
     c = sdiAnem.read();

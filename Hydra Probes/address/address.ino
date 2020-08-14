@@ -4,14 +4,15 @@
 #include <OneWire.h>
 int Hydra = 30;
 #define HPRelay 27 //Outpin PIN to control HydraProbe 12V Rail
+#define INVERTED true          //SDI-12 uses inverted logic
 String change_addr = "Ab!";
 String serial_ID = "0I!";
 String Reading_0 = "0M!";
-SoftwareSerial HSerial(12, 30); // RX, TX
+SoftwareSerial HSerial(12, 30, INVERTED); // RX, TX
 SDI12 Hydra_0(&HSerial, '1', true);
 void setup() {
 HSerial.begin(1200);
-Serial.begin(9800);
+Serial.begin(9600);
 pinMode(HPRelay, OUTPUT); //Set up HydraProbe relay
 delay(50);
 digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail

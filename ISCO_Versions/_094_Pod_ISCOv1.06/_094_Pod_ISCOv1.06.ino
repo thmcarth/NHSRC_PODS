@@ -108,6 +108,8 @@ int droplet_pin = 10;
 //Hydraprobes
 #define HydraSerial Serial3
 String moisture;
+unsigned long lastProbe = millis();
+int Probetime = 60000;
 //
 //FONA HTTP
 HTTPS_VIPER http = HTTPS_VIPER(); 
@@ -177,7 +179,9 @@ bool RQ30 = true;
 #define HPdata 30
 #define HPRelay 27 //Outpin PIN to control HydraProbe 12V Rail
 #define RQ30Relay 26 //Output PIN to control RQ30 12V Rail
-unsigned long fonaTimer = millis(); //timer to reset Fona
+//unsigned long fonaTimer = millis(); //timer to reset Fona
+unsigned long lastRQ = millis();
+unsigned long RQTime = 60000*5;
 //////////////////////////RELAYS
 Adafruit_INA260 ina260 = Adafruit_INA260();
 
@@ -238,6 +242,7 @@ void setup() {
 }
 
 void loop() {
+  unsigned long currentTime = millis();
     Watchdog.reset();
   if (ISCORail) // this is true at start
   {
@@ -257,7 +262,7 @@ void loop() {
   
   checkTexts(); //check for SMS commands
   Watchdog.reset(); //ensure the system doesn't prematurely reset
-  checkHydraProbes();
+  
   checkUserInput(); //check Serial for input commands
   getBV(); //get voltage rail readings
   read_parsivel();
@@ -282,6 +287,15 @@ if(currentWaterMillis - previousMillis > rain_period) {
   } 
 #endif 
 
+  if (currentTime - lastProbe >  Probetime){
+   checkHydraProbes();
+   lastProbe = millis();
+  }
+  if (currentTime - lastRQ > RQTime){
+    //getRQ30();
+    lastRQ = millis();
+  }
+  
   if (millis() - lastSave > minsToSave * 60000) //Save data every (minsToSave) minutes (1 mins)
   {
     Serial.println("----------");
