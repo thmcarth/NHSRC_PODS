@@ -203,6 +203,17 @@ def check_number(number, allowed):
 
 
 def create_time(array):
+    """Creates time format for VIPER Date-section in XML string
+
+        Parameters
+        ----------
+        array: time object
+
+        Returns
+        -------
+        string
+            String of year-month-day-hour-minutes-seconds
+        """
     # (year, month, day, hour, second, day of week , day of year)
     # 2011-08-19T15:31:08-04:00 is style we want to create
     year = array[0]
@@ -217,6 +228,17 @@ def create_time(array):
 
 
 def read_serial():
+    """ Determines where to send data based on serial input: user, Viper or non is anomalous
+
+           Parameters
+           ----------
+          None
+
+           Returns
+           -------
+           string
+               serial byte data
+           """
     global data
     global ident
     global t
@@ -241,10 +263,32 @@ def read_serial():
 
 
 def send_serial(message):
+    """Sends data over UART to Arduino
+
+        Parameters
+        ----------
+       message : int
+           String/bytes of data to send over Serial to Teensy Master Controller
+
+        Returns
+        -------
+        ``None``
+        """
     uart.write(message)
 
 
 def check_serial_type(msg):
+    """Checks serial data from Teensy to determine where to send data
+
+        Parameters
+        ----------
+      msg: string from UART
+            Message from Teensy
+
+        Returns
+        message type: 1 send to VIPER
+        2 send to user's phone
+        """
     if msg:
         first = msg[0]
         first = first.lower()
@@ -340,6 +384,17 @@ def http_test(post, date, ident):
 
 
 def ssend(body, ident, time):
+    """Sends a message to socket connection on VIPER server
+
+               Parameters
+               ----------
+              msg: message we want to send to phone
+              sms: sms object that xbee uses to store sender information
+
+               Returns
+               -------
+               None
+               """
     print("\n Starting Response \n")
     post = bytes('<?xml version="1.0" encoding="utf-8"?>\n'
                  '<alert xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
@@ -376,20 +431,52 @@ c = network.Cellular()
 
 
 def command_read(comm):
-    comm = comm[0]
-    switcher = {
+    """checks message from sender
+
+               Parameters
+               ----------
+              comm = command sent
+
+               Returns
+               -------
+              C1-10 based on message received
+               """
+
+    comm1 = comm[0]
+    if comm1 == 5 or 8 or 9 or 10:
+        if comm[0:2] is "5_":
+            return comm
+        elif comm[0:2] is "8_":
+            return comm
+        elif comm[0:2] is "9_":
+            return comm
+        elif comm[0:2] is "10_":
+            return comm
+    else:
+        switcher = {
         1: "C1",
         2: "C2",
         3: "C3",
         4: "C4",
-        5: "C5",
         6: "C6", # change VIPER POSTING to 30 seconds
         7: "C7"  # change VIPER POSTING to 5 Minutes
+
     }
-    return switcher.get(comm, "Invalid command")
+    return switcher.get(comm1, "Invalid command")
 
 
 def i2c_read():
+    """placeholder
+
+               Parameters
+               ----------
+              msg: message we want to send to phone
+              sms: sms object that xbee uses to store sender information
+
+               Returns
+               -------
+               None
+               """
     global i2c
     data_i2c = i2c.readfrom(40, 4)
     data_i2c = int.from_bytes(data_i2c, byteorder='big')
@@ -397,6 +484,17 @@ def i2c_read():
 
 
 def check_txt():
+    """   Checks Text Message make sure sender is allowed and message is a valid command
+
+              Parameters
+              ----------
+             None
+
+              Returns
+              -------
+              0: no message or invalid
+              else: a message and sms object
+              """
     if c.isconnected():
         sms = c.sms_receive()
         first_char = (sms['message'][0])
@@ -414,15 +512,48 @@ def check_txt():
 
 
 def create_msg(msg):
-    msg = "C" + msg
+    """Creates a message to send to Teensy
+
+           Parameters
+           ----------
+           msg: String
+
+
+           Returns
+           -------
+          String: message C#
+           """
+    msg = str("C" + msg)
     return msg
 
 
-def change_time(string):
-    string = "5_" + string
+def change_time(string,comm):
+    """message to change time of sampling for Teensy
+
+            Parameters
+            ----------
+           string: message to append
+
+            Returns
+            -------
+            string that changes time
+            """
+    string = "" + string
+    return string
 
 
 def send_text(msg, sms):
+    """Sends a text message back to most recent user
+
+            Parameters
+            ----------
+           msg: message we want to send to phone
+           sms: sms object that xbee uses to store sender information
+
+            Returns
+            -------
+            None
+            """
     c.sms_send(sms['sender'], msg)
 
 

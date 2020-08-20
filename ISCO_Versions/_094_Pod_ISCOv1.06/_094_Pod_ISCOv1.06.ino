@@ -343,13 +343,13 @@ if(currentWaterMillis - previousMillis > rain_period) {
 
 
 
-  if (millis() - textTimer > 100000 && timerOn) //Send last number to text a status on sampling after 100 second delay from sample command
+ /* if (millis() - textTimer > 100000 && timerOn) //Send last number to text a status on sampling after 100 second delay from sample command
   {
     //sendSampleReply(senderNum);
     timerOn = false;
   }
 
-/*  for (int x = 0; x < 64 ; ++x)
+  for (int x = 0; x < 64 ; ++x)
   { 
     char a = Serial.read();
     char b = xbeeSerial->read();
@@ -429,6 +429,7 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  while (xbeeSerial->available()){
  msg[ind++]=xbeeSerial->read();
  }
+ msg.trim();
  // may need to add \0 later
  if (msg == "C1"){
  
@@ -439,6 +440,8 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
 
 else if (msg =="C2"){
   Sample();
+  return_msg = "Sampling...";
+  sendSMS(return_msg);
  }
  
 else if (msg =="C3"){
@@ -446,10 +449,12 @@ else if (msg =="C3"){
       {
         ISCORail = false;  
         return_msg = "turned off";
+        sendSMS(return_msg);
       } else
       {
         ISCORail = true;
         return_msg = "turned on";
+        sendSMS(return_msg);
       }
  }
  
@@ -459,21 +464,24 @@ else if (msg =="C4"){
         grabSampleMode = false;
         EEPROM.write(eepromModeAddr, false);
          return_msg = "grab sample now off";
+         sendSMS(return_msg);
      
       } else
       {
         grabSampleMode = true;
         EEPROM.write(eepromModeAddr, true);
         return_msg = "grab sample now on";
+        sendSMS(return_msg);
       }
  }
  
-else if (msg.substring(0,3)=="C5_"){
+else if (msg.substring(0,3)=="C5_"){  //This command is the one to change the Sample interval of the ISCO
    int new_time = 0;
    new_time = msg.substring(4).toInt();
    grabSampleInterval = new_time;
    EEPROM.put(eepromIntervalAddr, grabSampleInterval);
    return_msg = "new sampling time is: " + new_time; 
+   sendSMS(return_msg);
  }
 
 else if (msg =="C6"){  // 
@@ -483,6 +491,20 @@ else if (msg =="C6"){  //
 else if (msg == "C7"){
   minsToPost = 5;
 }
+
+else if (msg.substring(0,3)=="C8_"){
+  rain_period = msg.substring(4).toInt();
+  return_msg = "new rainfall read time is: " + rain_period;
+  sendSMS(return_msg);
+}
+
+else if (msg.substring(0,3)=="C9_"){
+ 
+}
+else if (msg.substring(0,3)=="C10_"){
+
+}
+
 }
 
 
@@ -755,6 +777,10 @@ void readIscoSerial() //CHECK FOR OVERFLOW ON THIS ARRAY
 }
 int getBottleNumber() //parse the bottle Number from ISCO input
 {
+  /*
+   * This function reads through the ISCO string sent over Serial to filter out the Bottle number  by
+   *  finding commas to get the location of the data in the string
+   */
   int commaNumber1 = 0;
   int bottleNumber = 0;
   sprintf(bottleNumChar,"%s","");
@@ -1066,7 +1092,7 @@ unsigned long processSyncMessage() {
 
 
 
-float getWaterIntensity() //parse the bottle Number from ISCO input
+float getWaterIntensity() //parse the Water Intensity from ISCO input
 {
   char waterString [10];
   int commaNumber1 = 0;
