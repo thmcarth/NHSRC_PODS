@@ -158,6 +158,7 @@ unsigned long lastSave = millis();  // holds time since execution of last save t
 //ISCO
 #include <Time.h>
 #define IscoSamplePin 16
+int bottle_limit = 4;
 char iscoData[500];
 int cdIndex = 0;
 bool grabSampleMode = true;
@@ -165,7 +166,7 @@ int grabSampleInterval = 2 ; //Minute interval to auto grab sample as long as wa
 char iscoTime[15]; //holds last bottle sample time from ISCO memory
 #define iscoSerial Serial4
 bool timerOn = false;//logic for texting after sample is complete
-unsigned long textTimer = millis();
+unsigned long textTimer = millis();ss
 unsigned long sampleTimer = millis();
 bool ISCORail = true;
 int levelReading;
@@ -435,7 +436,7 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  
  String batt = getBV(); // call for battery
  return_msg = batt;
- sendSMS(batt);
+ sendSMS(return_msg);
  }
 
 else if (msg =="C2"){
@@ -486,10 +487,14 @@ else if (msg.substring(0,3)=="C5_"){  //This command is the one to change the Sa
 
 else if (msg =="C6"){  // 
   minsToPost = .5;
+  return_msg = "post time changed to 30 seconds";
+  sendSMS(return_msg);
 }
 
 else if (msg == "C7"){
   minsToPost = 5;
+  return_msg = "post time changed to 5 minutes";
+  sendSMS(return_msg);
 }
 
 else if (msg.substring(0,3)=="C8_"){
@@ -499,7 +504,9 @@ else if (msg.substring(0,3)=="C8_"){
 }
 
 else if (msg.substring(0,3)=="C9_"){
- 
+ RQTime = msg.substring(4).toInt();
+ return_msg = "new RQ read time is: " + RQTime;
+ sendSMS(return_msg);
 }
 else if (msg.substring(0,3)=="C10_"){
 
