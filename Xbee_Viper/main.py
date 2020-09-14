@@ -426,7 +426,8 @@ def ssend(body, ident, time):
     print("Socket closed.")
 
 
-i2c = I2C(1, freq=400000)  # I2c Module
+
+# i2c = I2C(1, freq=400000)  # I2c Module
 c = network.Cellular()
 
 
