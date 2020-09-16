@@ -166,7 +166,7 @@ int grabSampleInterval = 2 ; //Minute interval to auto grab sample as long as wa
 char iscoTime[15]; //holds last bottle sample time from ISCO memory
 #define iscoSerial Serial4
 bool timerOn = false;//logic for texting after sample is complete
-unsigned long textTimer = millis();ss
+unsigned long textTimer = millis();
 unsigned long sampleTimer = millis();
 bool ISCORail = true;
 int levelReading;
@@ -560,6 +560,12 @@ bool sendSMS(String message) {
   xbeeSerial->println(message);
 }
 
+bool massSMS(String message) {
+  // send an SMS!
+ xbeeSerial->print("A");
+  xbeeSerial->println(message);
+}
+
 uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout) {
   uint16_t buffidx = 0;
   boolean timeoutvalid = true;
@@ -652,7 +658,7 @@ void checkUserInput()
         Serial.print(getBottleNumber());
         if (getBottleNumber() == 24)
         {
-          sendSMS("All bottles are full. ISCO Sampler must be reset and bottles replaced");
+          massSMS("All bottles are full. ISCO Sampler must be reset and bottles replaced");
         }
         unsigned long sampled = getSampledTime();
         //Serial.print("time_t=");Serial.println(sampled);
@@ -674,11 +680,10 @@ void toggleSample()
   char Message[50];
   if (getBottleNumber() == 24)
   {
-    if (!successTimText)
-    {
-      successTimText = sendSMS("All bottles are full. ISCO Sampler must be reset and bottles replaced. Will not sample");
+    
+      massSMS("All bottles are full. ISCO Sampler must be reset and bottles replaced. Will not sample");
     }
-   }
+  else
   {
     Serial.println("Start sampler");
     textTimer = millis();
@@ -692,10 +697,7 @@ void toggleSample()
       }
       if (grabSampleMode)
       {
-        if (botNum == 2)
-        {
-          successTimText = false;
-        }
+       
         sprintf(Message, "%s%i", "Received Sample Command. Now Sampling Bottle # ", botNum);
         sendSMS(Message);
       }
