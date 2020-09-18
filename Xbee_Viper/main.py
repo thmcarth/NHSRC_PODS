@@ -1,11 +1,11 @@
 # Default template for XBee MicroPython projects
 
-import urequests
-import umqtt
-import uftp
-import remotemanager
-import hdc1080
-import ds1621
+# import urequests
+# import umqtt
+# import uftp
+# import remotemanager
+# import hdc1080
+# import ds1621
 import socket
 from machine import UART
 import time
@@ -221,7 +221,7 @@ def create_time(array):
     day = array[2]
     hour = array[3]
     seconds = array[4]
-    minutes = seconds/60
+    minutes = seconds / 60
     yearday = array[6]
     total_time = "" + year + "-" + month + "-" + day + "T" + hour + " " + minutes + " " + seconds
     return total_time
@@ -242,27 +242,28 @@ def read_serial():
     global data
     global ident
     global t
-
-    if uart.any() > 0:
-        serial = uart.read(uart.any())
-        types = check_serial_type(serial)
-        if types is 0:
-            return 0
-        elif types is 1:  # post to viper
-            serial = serial[1:]
-            t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
-            t = create_time(t)
-            ident = ident + 1
-            ssend(serial, ident, time)
-            return 0
-        elif types is 2:  # send to users
-            serial = serial[1:]
-            return serial
+    serial = ""
+    while uart.any() > 0:
+        serial = serial + uart.read(uart.any())
+    types = check_serial_type(serial)
+    if types is 0:
+        return 0
+    elif types is 1:  # post to viper
+        serial = serial[1:]
+        t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
+        t = create_time(t)
+        ident = ident + 1
+        ssend(serial, ident, time)
+        return 0
+    elif types is 2:  # send to users
+        return serial
+    elif types is 3:  # send to all users
+        return serial
     else:
         return 0
 
 
-def send_serial(message):
+def send_serial(message: object) -> object:
     """Sends data over UART to Arduino
 
         Parameters
@@ -294,7 +295,8 @@ def check_serial_type(msg):
         first = first.lower()
         switcher = {
             "p": 1,
-            "c": 2
+            "c": 2,
+            "a": 3
         }
         return switcher.get(first, 0)
 
@@ -401,16 +403,16 @@ def ssend(body, ident, time):
                  'xmlns:xsd="http://www.w3.org/2001/XMLSchema"\n'
                  'xmlns="urn:oasis:names:tc:emergency:cap:1.1">\n'
                  '<identifier>' + ident + '</identifier>\n'
-                 '<sender>EPA_WET_BOARD</sender>\n'
-                 '<sent>' + time + '</sent>\n'
-                 '<source>Acme Particulate Monitor,APM S/N 123456,0,0</source>\n'
-                 '<info>\n'
-                 '<headline>' + body + '</headline>\n'
-                 '<area>\n'
-                 '<circle>38.904722, -77.016389 0</circle>\n'
-                 '</area>\n'
-                 '</info>\n'
-                 '</alert>\n', 'utf-8')
+                                          '<sender>EPA_WET_BOARD</sender>\n'
+                                          '<sent>' + time + '</sent>\n'
+                                                            '<source>Acme Particulate Monitor,APM S/N 123456,0,0</source>\n'
+                                                            '<info>\n'
+                                                            '<headline>' + body + '</headline>\n'
+                                                                                  '<area>\n'
+                                                                                  '<circle>38.904722, -77.016389 0</circle>\n'
+                                                                                  '</area>\n'
+                                                                                  '</info>\n'
+                                                                                  '</alert>\n', 'utf-8')
     socketObject = usocket.socket(usocket.AF_INET, usocket.SOCK_STREAM)
     socketObject.connect(("remote.ertviper.org", 8038))
     print(" Sending \n")
@@ -424,7 +426,6 @@ def ssend(body, ident, time):
     # Receive and output the remainder of the page data.
     socketObject.close()
     print("Socket closed.")
-
 
 
 # i2c = I2C(1, freq=400000)  # I2c Module
@@ -455,14 +456,14 @@ def command_read(comm):
             return comm
     else:
         switcher = {
-        1: "C1",
-        2: "C2",
-        3: "C3",
-        4: "C4",
-        6: "C6", # change VIPER POSTING to 30 seconds
-        7: "C7"  # change VIPER POSTING to 5 Minutes
+            1: "C1",
+            2: "C2",
+            3: "C3",
+            4: "C4",
+            6: "C6",  # change VIPER POSTING to 30 seconds
+            7: "C7"  # change VIPER POSTING to 5 Minutes
 
-    }
+        }
     return switcher.get(comm1, "Invalid command")
 
 
@@ -504,13 +505,16 @@ def check_txt():
             if check_number(sms['sender'], allowed_number):
 
                 txt = command_read(sms['message'])
-                if command_read(sms['message']) is "Invalid command":
-                    return 0
+                if txt is "Invalid command":
+                    return 0, None
                 if first_char is "5":
                     return sms['message'], sms
                 else:
                     return sms['message'], sms
-
+        else:
+            return 0, None
+    else:
+        return 0, None
 
 def create_msg(msg):
     """Creates a message to send to Teensy
@@ -528,7 +532,7 @@ def create_msg(msg):
     return msg
 
 
-def change_time(string,comm):
+def change_time(string, comm):
     """message to change time of sampling for Teensy
 
             Parameters
@@ -558,16 +562,37 @@ def send_text(msg, sms):
     c.sms_send(sms['sender'], msg)
 
 
+def mass_text(msg, num):
+    """Sends a text message back to all users
+
+                Parameters
+                ----------
+               msg: message we want to send to phone
+               sms: sms object that xbee uses to store sender information
+
+                Returns
+                -------
+                None
+                """
+    c.sms_send(num, msg)
+
+
 while True:
+    # print("woo boy we working")
     serial_type = 0
-    msg, sms = check_txt()  # check for text* see if it is a message
-    if msg is not 0:
-        msg = create_msg(msg)
-        send_serial(msg)  # if true: interface with Teensy and send Teensy C#
-    else:
-        send_text("Invalid Command", sms)
+    if c.isconnected():
+        msg, sms = check_txt()  # check for text* see if it is a message
+        if msg is not 0:
+            msg = create_msg(msg)
+            send_serial(msg)  # if true: interface with Teensy and send Teensy C#
+        else:
+            send_text("Invalid Command", sms)
     read = read_serial()
     if read is not 0:
-        send_text(read, sms)
+        if read[0] is "C":
+            send_text(read[1:], sms)
+        elif read[0] is "A":
+            for each in allowed_number:
+                mass_text(read[1:], each)
 
     time.sleep(5)
