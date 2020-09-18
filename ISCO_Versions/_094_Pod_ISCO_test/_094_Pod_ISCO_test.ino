@@ -107,7 +107,6 @@ int droplet_pin = 10;
 //////////////END I2C Inits
 
 
-//Hydraprobes
 #define HydraSerial Serial3
 //String moisture;
 float temp, moisture, conductivity,permittivity;
@@ -168,6 +167,7 @@ unsigned long lastSave = millis();  // holds time since execution of last save t
 #include <Time.h>
 #define IscoSamplePin 16
 int bottle_limit = 4;
+int bottle_total = 0;
 char iscoData[500];
 int cdIndex = 0;
 bool grabSampleMode = true;
@@ -283,17 +283,17 @@ else if (comm == 'c'){ //hydraprobes
 }
 
 else if (comm == 'd'){ // water level sensor
-  Serial.println(getWaterLevel());
+  Serial.println("Water level is " + getWaterLevel());
  }
 else if (comm == 'e'){ //Davis Rain boi
   I2C_rain();
 }
 
 else if ( comm == 'f'){ //Xbee stuff
-  
+  testPost();
 }
-else if (comm =='g'){
-  
+else if (comm =='g'){ //moisture sensor
+  droplet_read();
 }
 else {Serial.println("wrong command or leftover serial text");}
 
@@ -301,8 +301,27 @@ Serial.flush();
 }
 
 
+void testPost() //post Data to VIPER
+{
+    int intWL;
+    if (getWaterLevel()) //Transpose the water level to 50 (wet) or 0 (dry) for viewing on VIPER
+    {
+      intWL = 50;
+      levelReading = 50;
+    } else
+    {
+      intWL = 0;
+      levelReading = 0;
+    }
+    //http.addInt("Bottle Number", getBottleNumber(), "/24");
+    //http.addFloat("Battery Voltage", getBV(), "V");
+    http.addInt("Level Reading", 50, " 0/50");
+    //http.addString("Parsivel Intensity",parsivel_intensity, "mm/h");
+    xbeeSerial->println(http.getData());
+   // xbeeSerial->println("P"http.getData());  //backup solution
+   Serial.println("Sent");
 
-
+}
 
 
 
@@ -506,7 +525,14 @@ int deleteSMS(int8_t number) { //delete the SMS number
 
 bool sendSMS(String message) {
   // send an SMS!
+ 
  xbeeSerial->print("C");
+  xbeeSerial->println(message);
+}
+
+bool massSMS(String message) {
+  // send SMS to all users!
+ xbeeSerial->print("A");
   xbeeSerial->println(message);
 }
 
@@ -565,7 +591,7 @@ bool sendXbee(char* message)
     return true;
   }
 
-}
+} 
 
 void flushxbeeSerial() { // flush xbee Serial port
   while (xbeeSerial->available())
@@ -602,7 +628,7 @@ void checkUserInput()
         Serial.print(getBottleNumber());
         if (getBottleNumber() == 24)
         {
-          sendSMS("All bottles are full. ISCO Sampler must be reset and bottles replaced");
+          massSMS("All bottles are full. ISCO Sampler must be reset and bottles replaced");
         }
         unsigned long sampled = getSampledTime();
         //Serial.print("time_t=");Serial.println(sampled);
@@ -624,28 +650,25 @@ void toggleSample()
   char Message[50];
   if (getBottleNumber() == 24)
   {
-    if (!successTimText)
-    {
-      successTimText = sendSMS("All bottles are full. ISCO Sampler must be reset and bottles replaced. Will not sample");
-    }
+      massSMS("All bottles are full. ISCO Sampler must be reset and bottles replaced. Will not sample");
    }
   {
     Serial.println("Start sampler");
     textTimer = millis();
     timerOn = true;
-
+      bottle_total++;
+      Serial.println(bottle_total);
     {
       botNum = getBottleNumber() + 1;
       if (botNum > 24)
       {
         botNum = 1;
+        bottle_total = 1;
+
       }
       if (grabSampleMode)
       {
-        if (botNum == 2)
-        {
-          successTimText = false;
-        }
+     
         sprintf(Message, "%s%i", "Received Sample Command. Now Sampling Bottle # ", botNum);
         sendSMS(Message);
       }
@@ -879,7 +902,7 @@ void postData() //post Data to VIPER
     http.addInt("Level Reading", intWL, " 0/50");
     http.addString("Parsivel Intensity",parsivel_intensity, "mm/h");
     xbeeSerial->println(http.getData());
-   // xbeeSerial->println("P"http.getData());  //backup solution
+    xbeeSerial->println("P"http.getData());  //backup solution
 
 }
 
@@ -1125,9 +1148,19 @@ time_t compileTime()
 
 #if DAVIS 
 void droplet_read(){
-  if(analogRead(droplet_pin)<300) rain_level = 3;
-else if(analogRead(droplet_pin)<500) rain_level = 2;
-else rain_level = 1;
+  if(analogRead(droplet_pin)<300) {
+    rain_level = 3;
+    Serial.println("Raining hard");
+  
+  }
+else if(analogRead(droplet_pin)<500){
+  rain_level = 2;
+  Serial.println("Raining medium");
+}
+else{
+  rain_level = 1;
+  Serial.println("Raining none");
+}
 }
 void I2C_rain(){
 
