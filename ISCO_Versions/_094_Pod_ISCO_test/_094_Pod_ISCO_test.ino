@@ -222,6 +222,9 @@ void setup() {
   
   pinMode(BattRail_VIN, INPUT);
   digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
+  delay(50);
+  moistureSensor.debugOff(); //Can turn debug on or off to see verbose output (OR NOT)
+  moistureSensor.begin(0);
   Watchdog.reset();
 
   
@@ -241,7 +244,7 @@ void setup() {
     grabSampleMode = false;
     grabSampleInterval = 1;
   }
-  Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println("minutes");
+  Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println(" minutes");
   xbeeSerial->begin(9600); //Startup SMS and Cell client
   
   pinMode(IscoSamplePin, OUTPUT);  // Setup sample pin output
@@ -257,9 +260,12 @@ void setup() {
 
 
 
-void loop() { 
-  while (Serial.available()<0);
+void loop() {
+  delay(1000); 
+  if (Serial.available()>0){
   char comm = Serial.read();
+  Serial.print("command is: ");
+  Serial.println((int)comm);
   if (comm == 'a'){ //BV
     Serial.println("Seeking out Battery Voltage");
   float c = getBV();
@@ -295,15 +301,27 @@ else if ( comm == 'f'){ //Xbee stuff
 else if (comm =='g'){ //moisture sensor
   droplet_read();
 }
+else if (comm =='h'){
+  Serial.println("h command send");  // test line to make sure program is running
+}
+else if (comm =='i'){
+  changeAddress();
+}
+else if (comm =='j'){
+  moistureSensor.getAddress();
+}
 else {Serial.println("wrong command or leftover serial text");}
-
-Serial.flush();
+  }
+  else {
+    //Serial.println ("no command seen");
+  }
+//Serial.flush();
 }
 
 
 void testPost() //post Data to VIPER
 {
-    int intWL;
+   /* int intWL;
     if (getWaterLevel()) //Transpose the water level to 50 (wet) or 0 (dry) for viewing on VIPER
     {
       intWL = 50;
@@ -313,6 +331,7 @@ void testPost() //post Data to VIPER
       intWL = 0;
       levelReading = 0;
     }
+    */
     //http.addInt("Bottle Number", getBottleNumber(), "/24");
     //http.addFloat("Battery Voltage", getBV(), "V");
     http.addInt("Level Reading", 50, " 0/50");
@@ -902,7 +921,7 @@ void postData() //post Data to VIPER
     http.addInt("Level Reading", intWL, " 0/50");
     http.addString("Parsivel Intensity",parsivel_intensity, "mm/h");
     xbeeSerial->println(http.getData());
-    xbeeSerial->println("P"http.getData());  //backup solution
+    //xbeeSerial->println(http.getData());  //backup solution
 
 }
 
@@ -1190,11 +1209,13 @@ void I2C_rain(){
 }
 #endif
 
-
+void changeAddress(){
+  moistureSensor.changeAddress(0);
+}
 
 void checkHydraProbes()
 {
-
+ 
   if (moistureSensor.getHPStatus())
   {
     Serial.println("---------------Sensor 1-----------------");
@@ -1223,7 +1244,7 @@ void checkHydraProbes()
   }
 
 
-  if (moistureSensor2.getHPStatus())
+  /*if (moistureSensor2.getHPStatus())
   {
     Serial.println("---------------Sensor 2-----------------");
     moistureSensor2.parseResponse();
@@ -1277,5 +1298,5 @@ void checkHydraProbes()
   {
     Serial.println("Could not communicate with HydraProbe (3).");
     Serial.println("Check Connection.");
-  }
+  }*/
 }
