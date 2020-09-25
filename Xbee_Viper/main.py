@@ -346,9 +346,9 @@ def http_post(host, body):
     s = socket.socket()
     try:
         s.connect((host, 443))
-        # post = bytes('POST /CAP/post HTTP/1.1\r\nHost: viper.response.epa.gov\r\nAuthorization: '
-        #             'Y29sbGllci5qYW1lc0BlcGEuZ292OldldGJvYXJkdGVhbTEh\r\nContent-Length: %s\r\nConnection: '
-        #             'Keep-Alive\r\n\r\n', 'utf8')
+        post = bytes('POST /CAP/post HTTP/1.1\r\nHost: viper.response.epa.gov\r\nAuthorization: '
+                    'Y29sbGllci5qYW1lc0BlcGEuZ292OldldGJvYXJkdGVhbTEh\r\nContent-Length: %s\r\nConnection: '
+                    'Keep-Alive\r\n\r\n', 'utf8')
         post = bytes(body)
         print("Requesting from host")
         s.send(post)
@@ -370,16 +370,16 @@ def http_test(post, date, ident):
                      'xmlns: xsd = "http://www.w3.org/2001/XMLSchema"'
                      'xmlns = "urn:oasis:names:tc:emergency:cap:1.1">'
                      '<identifier> ' + ident + ' </identifier '
-                                               '<sender> EPA_WET_BOARD </sender>'
-                                               '<sent>' + date + '</sent>>'
-                                                                 '<source>Acme Particulate Monitor,APM S/N 123456,0,0</source>'
-                                                                 '<info>'
-                                                                 '<headline> ' + post + '</headline>'
-                                                                                        '<area>'
-                                                                                        '<circle>38.904722, -77.016389 0</circle>'
-                                                                                        '</area>'
-                                                                                        '</info>'
-                                                                                        '</alert>\r\n\r\n')
+                     '<sender> EPA_WET_BOARD </sender>'
+                     '<sent>' + date + '</sent>>'
+                     '<source>Acme Particulate Monitor,APM S/N 123456,0,0</source>'
+                     '<info>'
+                     '<headline> ' + post + '</headline>'
+                     '<area>'
+                     '<circle>38.904722, -77.016389 0</circle>'
+                     '</area>'
+                     '</info>'
+                     '</alert>\r\n\r\n')
         st.send(post)
     finally:
         st.close()
@@ -577,7 +577,61 @@ def mass_text(msg, num):
     c.sms_send(num, msg)
 
 
-while True:
+
+
+
+def ssend_test():
+    """Sends a message to socket connection on VIPER server
+
+               Parameters
+               ----------
+              msg: message we want to send to phone
+              sms: sms object that xbee uses to store sender information
+
+               Returns
+               -------
+               None
+               """
+    print("\n Starting Response \n")
+    post = bytes('<?xml version="1.0" encoding="utf-8"?>\n'
+                 '<alert xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
+                 'xmlns:xsd="http://www.w3.org/2001/XMLSchema"\n'
+                 'xmlns="urn:oasis:names:tc:emergency:cap:1.1">\n'
+                 '<identifier>1</identifier>\n'
+                                          '<sender>EPA_WET_BOARD</sender>\n'
+                                          '<sent>2020-09-24T15:31:08-04:00</sent>\n'
+                                                            '<source>Xbee1,APM S/N 123456,0,0</source>\n'
+                                                            '<info>\n'
+                                                            '<headline>ConcRT;0.001;mg/m3;Green;ConcHr;0;mg/m3;Green;</headline>\n'
+                                                                                  '<area>\n'
+                                                                                  '<circle>38.904722, -77.016389 0</circle>\n'
+                                                                                  '</area>\n'
+                                                                                  '</info>\n'
+                                                                                  '</alert>\n', 'utf-8')
+    socketObject = usocket.socket(usocket.AF_INET, usocket.SOCK_STREAM)
+    socketObject.connect(("remote.ertviper.org", 6099))
+    print(" Sending \n")
+    socketObject.send(post)
+    print(socketObject.readline())
+
+    print("Printing the remainder of the server's response: \n")
+    # Use a "standard" receive call, "recv",
+    # to receive a specified number of
+    # bytes from the server, or as many bytes as are available.
+    # Receive and output the remainder of the page data.
+    socketObject.close()
+    print("Socket closed.")
+
+
+test_mode = 1
+
+while True and test_mode is not 0:
+    print("Test Mode")
+    ssend_test()
+    time.sleep(15)
+
+
+while True and test_mode is 0:
     # print("woo boy we working")
     serial_type = 0
     if c.isconnected():
