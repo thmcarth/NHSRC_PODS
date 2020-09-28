@@ -57,7 +57,7 @@ int eepromModeAddr = 0;
 int eepromIntervalAddr = 1;
 int eepromfirst_upload = 2;
 int is_first = 0;
-#define FIRST 1
+#define FIRST 0
 //////////////////////////////////////////////
 
 //Char arrays to hold time information
@@ -185,8 +185,7 @@ unsigned long iscoTimeout = millis();
 
 ///////////////////////////RELAYS
 bool RQ30 = true;
-//Soil moisture is on pin 30
-#define HPdata 30
+//Soil moisture data is on pin 30
 #define HPRelay 27 //Outpin PIN to control HydraProbe 12V Rail
 #define RQ30Relay 26 //Output PIN to control RQ30 12V Rail
 //unsigned long fonaTimer = millis(); //timer to reset Fona
@@ -215,16 +214,16 @@ void setup() {
   Serial.println("SD Card initialization done.");
   Serial.print("Code version ");Serial.println(versionNum);
 
-  pinMode(HPRelay, OUTPUT); //Set up HydraProbe relay
- 
+
+ pinMode(HPRelay, OUTPUT); //Set up HydraProbe relay
   //pinMode(levelPin, INPUT);
-  delay(50);
+  delay(500);
   
   pinMode(BattRail_VIN, INPUT);
   digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
-  delay(50);
-  moistureSensor.debugOff(); //Can turn debug on or off to see verbose output (OR NOT)
-  moistureSensor.begin(0);
+  delay(500);
+  moistureSensor.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
+  moistureSensor.begin(1);
   Watchdog.reset();
 
   
@@ -308,14 +307,14 @@ else if (comm =='i'){
   changeAddress();
 }
 else if (comm =='j'){
-  moistureSensor.getAddress();
+  Serial.println(moistureSensor.getAddress());
 }
 else {Serial.println("wrong command or leftover serial text");}
   }
   else {
     //Serial.println ("no command seen");
   }
-//Serial.flush();
+Serial.flush();
 }
 
 
