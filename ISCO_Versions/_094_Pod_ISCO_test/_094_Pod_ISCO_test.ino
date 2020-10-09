@@ -107,7 +107,7 @@ int droplet_pin = 10;
 //////////////END I2C Inits
 
 
-#define HydraSerial Serial3
+//#define HydraSerial Serial3
 //String moisture;
 float temp, moisture, conductivity,permittivity;
 float temp2, moisture2, conductivity2,permittivity2;
@@ -125,8 +125,8 @@ char senderNum[30];    //holds number of last number to text SIM
 char replybuffer[255]; //holds Fonas text reply
 char * replybuffer_command; //holds Fonas command part
 char * replybuffer_interval; //holds Fonas interval part
-HardwareSerial *xbeeSerial = &Serial5;
-HardwareSerial *parsivelSerial = &Serial1;
+#define xbeeSerial Serial1
+#define parsivelSerial Serial2
 int commandNum = -1; //integer value for which text command has been sent
 unsigned long lastPost = millis();
 float minsToPost = 5.0;
@@ -191,11 +191,11 @@ bool RQ30 = true;
 //unsigned long fonaTimer = millis(); //timer to reset Fona
 unsigned long lastRQ = millis();
 unsigned long RQTime = 60000*5;
-//////////////////////////RELAYS
 Adafruit_INA260 ina260 = Adafruit_INA260();
 
+
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   int countdownMS = Watchdog.enable(300000); //300 seconds or 5 minutes watchdog timer
   Serial.print("Enabled the watchdog with max countdown of ");
   Serial.print(countdownMS, DEC);
@@ -225,7 +225,12 @@ void setup() {
   moistureSensor.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
   moistureSensor.begin(1);
   Watchdog.reset();
-
+  if (!ina260.begin()) {
+    Serial.println("Couldn't find INA260 chip");
+  }
+  else{
+  Serial.println("Found INA260 chip");
+  }
   
   #if FIRST  //change FIRST to 1 when uploading and running first time
   EEPROM.write(eepromfirst_upload, 0);
@@ -244,7 +249,7 @@ void setup() {
     grabSampleInterval = 1;
   }
   Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println(" minutes");
-  xbeeSerial->begin(9600); //Startup SMS and Cell client
+  xbeeSerial.begin(9600); //Startup SMS and Cell client
   
   pinMode(IscoSamplePin, OUTPUT);  // Setup sample pin output
   digitalWrite(IscoSamplePin, LOW);
@@ -263,13 +268,14 @@ void loop() {
   delay(1000); 
   if (Serial.available()>0){
   char comm = Serial.read();
-  Serial.print("command is: ");
-  Serial.println((int)comm);
+  //Serial.print("command is: ");
+  //Serial.println((int)comm);
   if (comm == 'a'){ //BV
     Serial.println("Seeking out Battery Voltage");
   float c = getBV();
   delay (1000);
-  Serial.println(c);
+  Serial.print("Voltage is ");
+Serial.println(c);
   }
 
 else if (comm == 'b'){ //parsivel 
@@ -309,12 +315,18 @@ else if (comm =='i'){
 else if (comm =='j'){
   Serial.println(moistureSensor.getAddress());
 }
-else {Serial.println("wrong command or leftover serial text");}
+else if (comm =='k'){
+  Serial.println("Send");
+  xbeeSerial.println("TEST");
+}
+else if(comm == 13){
+  //
   }
   else {
-    //Serial.println ("no command seen");
+    Serial.println ("no command seen");
   }
 Serial.flush();
+}
 }
 
 
@@ -335,7 +347,7 @@ void testPost() //post Data to VIPER
     //http.addFloat("Battery Voltage", getBV(), "V");
     http.addInt("Level Reading", 50, " 0/50");
     //http.addString("Parsivel Intensity",parsivel_intensity, "mm/h");
-    xbeeSerial->println(http.getData());
+    xbeeSerial.println(http.getData());
    // xbeeSerial->println("P"http.getData());  //backup solution
    Serial.println("Sent");
 
@@ -351,19 +363,19 @@ void setup_parsivel() { // Tells the Parsivel through serial message how we want
   // kinetic energy, and raw data (in this order)
   String interval_send = "CS/I/"+interval;
   String enable_msg = "CS/M/M/1";
-  parsivelSerial->print(request_data);
+  parsivelSerial.print(request_data);
   delay(1000);
-  parsivelSerial->print(interval_send);
+  parsivelSerial.print(interval_send);
   delay(1000);
-  parsivelSerial->print(enable_msg);
+  parsivelSerial.print(enable_msg);
   delay(500);
 }
 
 void read_parsivel(){
   String message = "";
   int i = 0;
-  while (parsivelSerial->available()){
-   message = ""+ message + parsivelSerial->read()+ "";
+  while (parsivelSerial.available()){
+   message = ""+ message + parsivelSerial.read()+ "";
   }
   parsivel_data = message;
   parsivel_intensity = parse_Intensity(message);
@@ -414,8 +426,8 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   int ind = 0;
   String msg;
   String return_msg;
- while (xbeeSerial->available()){
- msg[ind++]=xbeeSerial->read();
+ while (xbeeSerial.available()){
+ msg[ind++]=xbeeSerial.read();
  }
  msg.trim();
  // may need to add \0 later
@@ -516,9 +528,9 @@ char* readSMSNum() {  //read in the number of text messages on the buffer and se
   delay(50);
   int index = 0;
   char num;
-  while (xbeeSerial->available())
+  while (xbeeSerial.available())
   {
-    num = xbeeSerial->read();
+    num = xbeeSerial.read();
     response[index] = num;
   }
   
@@ -544,14 +556,14 @@ int deleteSMS(int8_t number) { //delete the SMS number
 bool sendSMS(String message) {
   // send an SMS!
  
- xbeeSerial->print("C");
-  xbeeSerial->println(message);
+ xbeeSerial.print("C");
+  xbeeSerial.println(message);
 }
 
 bool massSMS(String message) {
   // send SMS to all users!
- xbeeSerial->print("A");
-  xbeeSerial->println(message);
+ xbeeSerial.print("A");
+  xbeeSerial.println(message);
 }
 
 uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout) {
@@ -597,9 +609,9 @@ bool sendXbee(char* message)
 {
   char a;
   flushxbeeSerial();
-  xbeeSerial->println(message);
-  while (xbeeSerial->available())
-    a = xbeeSerial->read();
+  xbeeSerial.println(message);
+  while (xbeeSerial.available())
+    a = xbeeSerial.read();
   if (a == '0' || a == false)
   {
     return false;
@@ -612,8 +624,8 @@ bool sendXbee(char* message)
 } 
 
 void flushxbeeSerial() { // flush xbee Serial port
-  while (xbeeSerial->available())
-    xbeeSerial->flush();
+  while (xbeeSerial.available())
+    xbeeSerial.flush();
 }
 
 ///////////////////////////////////////**********************FONA FUNCTIONS
@@ -859,6 +871,8 @@ float getBV()
 {
 float c = 0.0;
 c = ina260.readBusVoltage();
+Serial.print("Batt: ");
+Serial.println(c);
   return c;
   
 }
@@ -919,7 +933,7 @@ void postData() //post Data to VIPER
     http.addFloat("Battery Voltage", getBV(), "V");
     http.addInt("Level Reading", intWL, " 0/50");
     http.addString("Parsivel Intensity",parsivel_intensity, "mm/h");
-    xbeeSerial->println(http.getData());
+    xbeeSerial.println(http.getData());
     //xbeeSerial->println(http.getData());  //backup solution
 
 }
@@ -1209,7 +1223,7 @@ void I2C_rain(){
 #endif
 
 void changeAddress(){
-  moistureSensor.changeAddress(0);
+  moistureSensor.changeAddress(1);
 }
 
 void checkHydraProbes()
