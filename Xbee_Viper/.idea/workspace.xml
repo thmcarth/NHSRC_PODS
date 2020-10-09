@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="9807b173-736a-4191-b25e-3a09cccafa01" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/../ISCO_Versions/_094_Pod_ISCO_test/_094_Pod_ISCO_test.ino" beforeDir="false" afterPath="$PROJECT_DIR$/../ISCO_Versions/_094_Pod_ISCO_test/_094_Pod_ISCO_test.ino" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Libraries/Adafruit_INA260_Library/Adafruit_INA260.h" beforeDir="false" afterPath="$PROJECT_DIR$/../Libraries/Adafruit_INA260_Library/Adafruit_INA260.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -72,10 +73,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="949" height="277" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1600802119493" />
-    <state x="1133" y="348" width="607" height="340" key="com.intellij.ide.util.TipDialog" timestamp="1600972249068">
+    <state x="1133" y="348" width="607" height="340" key="com.intellij.ide.util.TipDialog" timestamp="1601398161494">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="1133" y="348" width="607" height="340" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1600972249068" />
+    <state x="1133" y="348" width="607" height="340" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1601398161494" />
     <state x="1053" y="100" width="774" height="840" maximized="true" key="dock-window-1" timestamp="1597941526908">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>

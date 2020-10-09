@@ -7,6 +7,8 @@
 # import hdc1080
 # import ds1621
 import socket
+import sys
+
 from machine import UART
 import time
 from machine import I2C
@@ -145,7 +147,7 @@ Connection: Keep-Alive
 This ^^ is all the body
 '''
 
-uart = UART(1, 9600)
+
 data = 0
 sms = 0
 ident = 0
@@ -242,11 +244,10 @@ def read_serial():
     global data
     global ident
     global t
-    serial = ""
-    while uart.any() > 0:
-        serial = serial + uart.read(uart.any())
-    types = check_serial_type(serial)
-    if types is 0:
+    serial = sys.stdin.read()
+    if serial:
+        types = check_serial_type(serial)
+    if types is None:
         return 0
     elif types is 1:  # post to viper
         serial = serial[1:]
@@ -275,7 +276,7 @@ def send_serial(message: object) -> object:
         -------
         ``None``
         """
-    uart.write(message)
+    sys.stdout.write(message)
 
 
 def check_serial_type(msg):
