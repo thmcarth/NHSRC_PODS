@@ -223,7 +223,7 @@ void setup() {
   digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
   delay(500);
   moistureSensor.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
-  moistureSensor.begin(1);
+  moistureSensor.begin(0);
   Watchdog.reset();
 
   
