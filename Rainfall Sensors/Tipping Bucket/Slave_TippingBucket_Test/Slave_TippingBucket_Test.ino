@@ -57,7 +57,7 @@ void loop() {
     //DEVICE SLEEPING HERE
     sleep_disable();  //First line after wake up
     Counter = 0;  //Clear counter
-    TWCR = bit(TWEN) | bit(TWIE) | bit(TWEA) | bit(TWINT);  //Turn on I2C acknowledgement bits
+   // TWCR = bit(TWEN) | bit(TWIE) | bit(TWEA) | bit(TWINT);  //Turn on I2C acknowledgement bits
     Wire.begin (ADR); //Restart I2C to ensure propper operation
    }
 
