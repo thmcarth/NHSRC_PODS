@@ -85,9 +85,11 @@ int deleteSMSSuccess = 0;
 int sender_count = 0;
 /////////////////////////
 
-/////////////////////////Parsivel data 
+/////////////////////////Parsivel 
 String parsivel_data;
 char* parsivel_intensity;
+int lastParsivel;
+int Parsiveltime;
 /////////////////////////
 
 //DAVIS RAINBUCKET
@@ -214,7 +216,7 @@ void setup() {
   pinMode(BattRail_VIN, INPUT);
   digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
   Watchdog.reset();
-
+  setup_parsivel();// Setup Parsivel output string
   
   #if FIRST  //change FIRST to 1 when uploading and running first time
   EEPROM.write(eepromfirst_upload, 0);
@@ -266,9 +268,9 @@ void loop() {
   
   checkUserInput(); //check Serial for input commands
   getBV(); //get voltage rail readings
-  read_parsivel();
+ 
 
-  if (millis() - lastPost > minsToPost * 60000) //Post data every (minsToPost) minutes
+  if (currentTime - lastPost > minsToPost * 60000) //Post data every (minsToPost) minutes
   { // at the moment we post every 1 minute   
     postData();
     lastPost = millis(); //reset timer
@@ -276,7 +278,7 @@ void loop() {
     flushxbeeSerial();
   } else
   {
-    Serial.print(((minsToPost * 60000) - (millis() - lastPost)) / 1000); Serial.println(" Seconds left b4 Post");
+    Serial.print(((minsToPost * 60000) - (currentTime - lastPost)) / 1000); Serial.println(" Seconds left b4 Post");
   }
 #if DAVIS
 //>>>>>>> 6b4848fa0c3169bf08481d0b8e37c27756e02b87
@@ -292,11 +294,20 @@ if(currentWaterMillis - previousMillis > rain_period) {
    checkHydraProbes();
    lastProbe = millis();
   }
+#if RQ
   if (currentTime - lastRQ > RQTime){
     //getRQ30();
     lastRQ = millis();
   }
-  
+#endif
+
+#if PARSIVEL
+if (currentTime - lastParsivel >  Parsiveltime){
+   read_parsivel();
+   lastParsivel = millis();
+  }
+#endif
+
   if (millis() - lastSave > minsToSave * 60000) //Save data every (minsToSave) minutes (1 mins)
   {
     Serial.println("----------");
