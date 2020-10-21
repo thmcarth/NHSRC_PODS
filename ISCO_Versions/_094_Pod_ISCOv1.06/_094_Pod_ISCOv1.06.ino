@@ -241,6 +241,7 @@ void setup() {
   digitalWrite(IscoSamplePin, LOW);
   Serial.begin(9600);
   iscoSerial.begin(9600); //Setup comms with ISCO
+  parsivelSerial.begin(19200);
   Watchdog.reset();
 }
 
