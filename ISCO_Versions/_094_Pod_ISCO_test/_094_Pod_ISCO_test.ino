@@ -255,6 +255,7 @@ void setup() {
   digitalWrite(IscoSamplePin, LOW);
   Serial.begin(9600);
   iscoSerial.begin(9600); //Setup comms with ISCO
+  parsivelSerial.begin(19200);
   Watchdog.reset();
   setup_parsivel();
 }
@@ -319,6 +320,9 @@ else if (comm =='k'){
   Serial.println("Send");
   xbeeSerial.println("TEST");
 }
+else if (comm == '0'){
+  parsivelSerial.print("CS/I/0");
+}
 else if(comm == 13){
   //
   }
@@ -357,17 +361,17 @@ void testPost() //post Data to VIPER
 
 void setup_parsivel() { // Tells the Parsivel through serial message how we want to get the telegram data from it
   //refer to OneDrive in Parsivel2-->Terminal Commands Pdf.
-  String interval = "60"; // This is how often we want to receive data from the parsivel
+  String interval = "10"; // This is how often we want to receive data from the parsivel
   
-  String request_data = "CS/M/S/%19,/%01,/%02,/%60,/%34,/%18,/%93/r/n";// this asks for date/time, intensity, rain accumulated, particles detected, 
+  String request_data = "CS/M/S/%19,/%01,/%02,/%60,/%34,/%18,/%93/r/n/%61/r/n";// this asks for date/time, intensity, rain accumulated, particles detected, 
   // kinetic energy, and raw data (in this order)
-  String interval_send = "CS/I/"+interval;
+  String interval_send = "CS/I/10";
   String enable_msg = "CS/M/M/1";
   parsivelSerial.print(request_data);
   delay(1000);
-  parsivelSerial.print(interval_send);
-  delay(1000);
   parsivelSerial.print(enable_msg);
+  delay(1000);
+  parsivelSerial.print(interval_send);
   delay(500);
 }
 
