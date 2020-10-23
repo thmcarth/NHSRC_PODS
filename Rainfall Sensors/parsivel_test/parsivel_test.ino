@@ -5,7 +5,7 @@ char* parsivel_intensity;
 /////////////////////////
 void setup() {
   // put your setup code here, to run once:
-Serial2.begin(1200);
+Serial2.begin(19200);
 Serial.begin(9600);
 delay(5000);
 //setup_parsivel();
@@ -16,6 +16,8 @@ void loop() {
   //read_parsivel();
   if (Serial2.available()>0)
   Serial.println(Serial2.readString());
+  else 
+  Serial.println("sad");
 }
 
 void setup_parsivel() { // Tells the Parsivel through serial message how we want to get the telegram data from it
