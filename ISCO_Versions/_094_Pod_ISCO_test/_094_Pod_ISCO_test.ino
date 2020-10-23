@@ -195,7 +195,7 @@ Adafruit_INA260 ina260 = Adafruit_INA260();
 
 
 void setup() {
-  Serial.begin(115200);
+   Serial.begin(9600);
   int countdownMS = Watchdog.enable(300000); //300 seconds or 5 minutes watchdog timer
   Serial.print("Enabled the watchdog with max countdown of ");
   Serial.print(countdownMS, DEC);
@@ -253,7 +253,7 @@ void setup() {
   
   pinMode(IscoSamplePin, OUTPUT);  // Setup sample pin output
   digitalWrite(IscoSamplePin, LOW);
-  Serial.begin(9600);
+ 
   iscoSerial.begin(9600); //Setup comms with ISCO
   parsivelSerial.begin(19200);
   Watchdog.reset();
@@ -266,6 +266,7 @@ void setup() {
 
 
 void loop() {
+  Watchdog.reset();
   delay(1000); 
   if (Serial.available()>0){
   char comm = Serial.read();
@@ -363,30 +364,44 @@ void setup_parsivel() { // Tells the Parsivel through serial message how we want
   //refer to OneDrive in Parsivel2-->Terminal Commands Pdf.
   String interval = "10"; // This is how often we want to receive data from the parsivel
   
-  String request_data = "CS/M/S/%19,/%01,/%02,/%60,/%34,/%18,/%93/r/n/%61/r/n";// this asks for date/time, intensity, rain accumulated, particles detected, 
+  //String request_data = "CS/M/S/%01,/%02,/%60,/%34,/%18,/%93/r/n/%61/r/\r";// this asks for  intensity, rain accumulated, particles detected, 
   // kinetic energy, and raw data (in this order)
-  String interval_send = "CS/I/10";
-  String enable_msg = "CS/M/M/1";
+  String request_data = "CS/M/S/%61/r/n\r";
+  String interval_send = "CS/I/10\r";
+  String enable_msg = "CS/M/M/1\r";
   parsivelSerial.print(request_data);
-  delay(1000);
+  delay(2000);
+  if(parsivelSerial.available()>0)
+  Serial.println(parsivelSerial.readString());
+  
   parsivelSerial.print(enable_msg);
-  delay(1000);
+  delay(2000);
+  if(parsivelSerial.available()>0)
+  Serial.println(parsivelSerial.readString());
+  
   parsivelSerial.print(interval_send);
-  delay(500);
+  delay(1500);
+  if(parsivelSerial.available()>0)
+  Serial.println(parsivelSerial.readString());
+  
+  Serial.println("Parsivel Setup");
 }
 
 void read_parsivel(){
+  Serial.println("Start Reading");
   String message = "";
   int i = 0;
-  while (parsivelSerial.available()){
+  while (parsivelSerial.available()>0){
    message = ""+ message + parsivelSerial.read()+ "";
   }
   parsivel_data = message;
   parsivel_intensity = parse_Intensity(message);
+  Serial.println("Done Reading");
 }
 
 char* parse_Intensity(String message){
-
+Serial.print("Message is");
+Serial.println(message);
 int len = message.length();
 int indx_semi_1 = 0;
 int indx_semi_2 = 0;
@@ -394,6 +409,7 @@ int i = 0;
 int count = 0;
 String mess;
 char* intensity;
+if (len >= 8){  // Intensity value is at least 8 digits.  If the message isnt this long, there's nothing to look at.
 for ( i = 0; i < len; i++)
     if (message.charAt(i) == ';')
        count++;
@@ -407,6 +423,9 @@ for ( i = 0; i < len; i++)
  int leng = mess.length();
  mess.toCharArray(intensity,leng+1);
  return intensity;
+}
+else
+return "Empty";
 }
 
 
