@@ -323,7 +323,8 @@ else if (comm =='k'){
   http.addInt("Level Reading2", 2, "rems");
   http.addInt("Level Reading3", 3, "tems");
   http.addInt("Level Reading4", 4, "zems");
-  xbeeSerial.println("TEST");
+  Serial.println(http.getData());
+  xbeeSerial.println(http.getData());
 }
 else if (comm == '0'){
   parsivelSerial.print("CS/I/0");
