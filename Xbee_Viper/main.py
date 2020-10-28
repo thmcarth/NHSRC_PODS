@@ -108,6 +108,25 @@ allowed = ["+12524126262", "+19198860812", "+15179451531", "+16157148918", "+191
            "+19196019412"]
 prev_sender = ""
 
+def time_counter(seconds):
+    """Pauses program for a user-specified time.
+
+    Parameters
+    ----------
+    seconds : int
+        number of seconds to pause program
+
+    Returns
+    -------
+    ``None``
+    """
+    start = time.time()
+    elapsed = 0
+    while elapsed < seconds:
+        elapsed = time.time() - start
+    #    print('done counting!')
+    return None
+
 
 def create_time(array):
     """creates time for VIPER post
@@ -259,7 +278,7 @@ def ssend(body, ident, time):
                                                                                                  '</info>\n'
                                                                                                  '</alert>\n', 'utf-8')
     socketObject = usocket.socket(usocket.AF_INET, usocket.SOCK_STREAM)
-    socketObject.connect(("remote.ertviper.org", 8038))
+    socketObject.connect(("remote.ertviper.org", 6099))
     print(" Sending \n")
     socketObject.send(post)
     print(socketObject.readline())
