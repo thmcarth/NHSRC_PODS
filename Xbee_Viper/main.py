@@ -9,7 +9,9 @@
 import socket
 # from machine import UART
 import time
+
 # from machine import I2C
+
 import usocket
 import network
 import sys
@@ -104,9 +106,10 @@ data = 0
 sms = 0
 ident = 0
 t = 0
-allowed = ["+12524126262", "+19198860812", "+15179451531", "+16157148918", "+19194233837", "+19192301472",
-           "+19196019412"]
+allowed = ["2524126262", "9198860812", "5179451531", "6157148918", "9194233837", "9192301472",
+           "9196019412"]
 prev_sender = ""
+
 
 def time_counter(seconds):
     """Pauses program for a user-specified time.
@@ -141,13 +144,17 @@ def create_time(array):
            """
     # (year, month, day, hour, second, day of week , day of year)
     # 2011-08-19T15:31:08-04:00 is style we want to create
+    # t1 = datetime.datetime.now()
+    # print("ti is: ", t1)
+
     year = array[0]
     month = array[1]
     day = array[2]
     hour = array[3]
-    second = array[4]
+    minute = array[4]
+    second = array[5]
     yearday = array[6]
-    total_time = "" + str(year) + "-" + str(month) + "-" + str(day) + "T" + str(hour)
+    total_time = "" + str(year) + "-" + str(month) + "-" + str(day) + "T" + str(hour) +":"+ str(minute)+":"+str(second)+"-05:00"
     print("Total Time: ", total_time)
     return total_time
 
@@ -256,7 +263,6 @@ def ssend(body, ident, time):
            ----------
           msg: message we want to send to phone
           sms: sms object that xbee uses to store sender information
-
            Returns
            -------
            None
@@ -268,18 +274,19 @@ def ssend(body, ident, time):
                  'xmlns:xsd="http://www.w3.org/2001/XMLSchema"\n'
                  'xmlns="urn:oasis:names:tc:emergency:cap:1.1">\n'
                  '<identifier>' + str(ident) + '</identifier>\n'
-                                               '<sender>EPA_WET_BOARD_test 10-28-2020</sender>\n'
-                                               '<sent>' + str(time) + '</sent>\n'
-                                                                      '<source>Board 0,APM S/N 123456,0,0</source>\n'
-                                                                      '<info>\n'
-                                                                      '<headline>' + str(body) + '</headline>\n'
-                                                                                                 '<area>\n'
-                                                                                                 '<circle>38.904722, -77.016389 0</circle>\n'
-                                                                                                 '</area>\n'
-                                                                                                 '</info>\n'
-                                                                                                 '</alert>\n', 'utf-8')
+                 '<sender>EPA_WET_BOARD_test 10-28-2020</sender>\n'
+                 '<sent>' + str(time) + '</sent>\n'
+                 '<source>Board 0,BoardTest1,'
+                 '1,2</source>\n'
+                 '<info>\n'
+                 '<headline>' + str(body) + '</headline>\n'
+                 '<area>\n'
+                 '<circle>38.904722, -77.016389 0</circle>\n'
+                 '</area>\n'
+                 '</info>\n'
+                 '</alert>\n', 'utf-8')
     socketObject = usocket.socket(usocket.AF_INET, usocket.SOCK_STREAM)
-    socketObject.connect(("remote.ertviper.org", 6099))
+    socketObject.connect(("remote.ertviper.org", 8038))
     print(" Sending \n")
     socketObject.send(post)
     print(socketObject.readline())
@@ -310,6 +317,7 @@ def command_read(comm):
         9: "C9",
         10: "C10"
     }
+    print("Received: ", comm)
     return switcher.get(comm, "Invalid command")
 
 
@@ -347,15 +355,16 @@ def check_txt():
     if c.isconnected():
         sms_txt = c.sms_receive()
         if sms_txt:
+            print("Sender is: ", sms_txt['sender'])
             sender = sms_txt['sender']
             valid = check_number(sender)
-        if sms and valid:
-            if command_read(sms['message']) is "Invalid command":
-                return (None, sms)
+        if sms_txt and valid:
+            if command_read(sms_txt['message']) is "Invalid command":
+                return ["", sms_txt]
             else:
-                return (sms['message'], sms)
+                return [sms_txt['message'], sms_txt]
         else:
-            return (None, sms)
+            return ["", sms_txt]
 
 
 def create_msg(msg):
@@ -370,8 +379,9 @@ def create_msg(msg):
         -------
        String: message C#
         """
-    msg = "C" + msg
-    return msg
+    print("Message is ", msg)
+    msg1 = "C" + str(msg)
+    return msg1
 
 
 def send_text(msg, sms):
@@ -440,6 +450,7 @@ def check_number(number):
     ok_num = 0
     if number in allowed:
         ok_num = 1
+    print("Number valid: ", number, " is ", ok_num)
     return ok_num
 
 
@@ -452,16 +463,21 @@ while True:
 
            """
     # sms_sender = ''
+
     serial_type = 0
-    (msg, sms) = check_txt()  # check for text*
+    if c.isconnected():
+        msg_sms = check_txt()  # check for text*
     # tuple_msg = check_txt()
-    # msg = tuple_msg
-    # sms = tuple_msg
-    if sms:
-        prev_sender = sms['sender']
-    if msg is not None:
-        msg = create_msg(msg)
-        send_serial(msg)  # if true: interface with Teensy and send Teensy C#
+        if len(msg_sms[0]) > 0:
+            msg = msg_sms[0]
+        else:
+            msg = None
+        sms = msg_sms[1]
+        if sms:
+            prev_sender = sms['sender']
+        if msg is not None:
+            msg = create_msg(msg)
+            send_serial(msg)  # if true: interface with Teensy and send Teensy C#
 
     read_serial()
 
