@@ -148,6 +148,7 @@ def create_time(array):
     second = array[4]
     yearday = array[6]
     total_time = "" + str(year) + "-" + str(month) + "-" + str(day) + "T" + str(hour)
+    print("Total Time: ", total_time)
     return total_time
 
 
@@ -166,7 +167,7 @@ def read_serial():
             t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
             t = create_time(t)
             ident = ident + 1
-            ssend(serial, ident, time)
+            ssend(serial, ident, t)
 
         elif types is 2:  # send to users
             serial = serial[1:]
