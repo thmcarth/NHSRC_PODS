@@ -319,12 +319,10 @@ else if (comm =='j'){
 }
 else if (comm =='k'){
   Serial.println("Send");
-  http.addInt("Level Reading1", 1, "mems");
-  http.addInt("Level Reading2", 2, "rems");
-  http.addInt("Level Reading3", 3, "tems");
-  http.addInt("Level Reading4", 4, "zems");
+  http.addInt("LevelReading1", 2, "mems");
   Serial.println(http.getData());
   xbeeSerial.println(http.getData());
+  http.clearData();
 }
 else if (comm == '0'){
   parsivelSerial.print("CS/I/0");
