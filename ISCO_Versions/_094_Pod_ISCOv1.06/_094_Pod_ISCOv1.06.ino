@@ -5,7 +5,7 @@
 #include <Time.h>
 #include <TimeLib.h>
 //#include <Ubidots_FONA.h>
-
+#include <SoftwareSerial.h>
 
 /* * Teensy 3.5 Custom PCB developed to automate ISCO 6700 Sampling with a digital output pin
  * Unit is controlled via SMS commands
@@ -86,10 +86,18 @@ int sender_count = 0;
 /////////////////////////
 
 /////////////////////////Parsivel 
-String parsivel_data;
-char* parsivel_intensity;
 int lastParsivel;
 int Parsiveltime;
+const int SSERIAL_RX_PIN = 10;  //Soft Serial Receive pin
+const int SSERIAL_TX_PIN = 11;  //Soft Serial Transmit pin
+const int SSERIAL_CTRL_PIN= 3;   //RS485 Direction control
+const int RS485_TRANSMIT = HIGH;
+const int RS485_RECEIVE = LOW;
+String parsivel_data;
+char* parsivel_intensity;
+SoftwareSerial ParsivelSerial(SSERIAL_RX_PIN, SSERIAL_TX_PIN); // RX, TX
+int byteReceived;
+int byteSent;
 /////////////////////////
 
 //DAVIS RAINBUCKET

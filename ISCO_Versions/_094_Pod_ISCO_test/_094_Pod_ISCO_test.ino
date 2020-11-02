@@ -405,8 +405,8 @@ void read_parsivel(){
   Serial.println("Start Reading");
   String message = "";
   int i = 0;
-  while (parsivelSerial.available()>0){
-   message = ""+ message + parsivelSerial.read()+ "";
+  while (ParsivelSerial.available()){
+   message = ""+ message + ParsivelSerial.read()+ "";
   }
   parsivel_data = message;
   parsivel_intensity = parse_Intensity(message);
