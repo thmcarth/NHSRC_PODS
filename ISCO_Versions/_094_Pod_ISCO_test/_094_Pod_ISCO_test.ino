@@ -97,6 +97,8 @@ const int RS485_RECEIVE = LOW;
 String parsivel_data;
 char* parsivel_intensity;
 SoftwareSerial ParsivelSerial(SSERIAL_RX_PIN, SSERIAL_TX_PIN); // RX, TX
+int byteReceived;
+int byteSent;
 /////////////////////////
 
 //DAVIS RAINBUCKET
@@ -263,6 +265,7 @@ void setup() {
  
   iscoSerial.begin(9600); //Setup comms with ISCO
   parsivelSerial.begin(19200);
+  digitalWrite(SSERIAL_CTRL_PIN, RS485_RECEIVE);  // Put RS485 in receive mode
   ParsivelSerial.begin(19200);
   Watchdog.reset();
   setup_parsivel();
