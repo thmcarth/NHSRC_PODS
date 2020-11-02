@@ -6,6 +6,7 @@
 #include <Time.h>
 #include <TimeLib.h>
 //#include <Ubidots_FONA.h>
+#include <SoftwareSerial.h>
 
 
 /* * Teensy 3.5 Custom PCB developed to automate ISCO 6700 Sampling with a digital output pin
@@ -18,7 +19,7 @@
  * Grab Sampling Mode - Pulses pin whenever a grab sample is initiated by SMS command
 
 
-  Tim McArthur
+  Hawes Collier
 
 */
 //094 Pod code Version 0.1 - Cleaned up working code and added watchdog to testing unit. 2/21/18 - Tim McArthur
@@ -87,7 +88,13 @@ int deleteSMSSuccess = 0;
 int sender_count = 0;
 /////////////////////////
 
-/////////////////////////Parsivel data 
+/////////////////////////Parsivel data/RS-485
+const int SSERIAL_RX_PIN = 10;  //Soft Serial Receive pin
+const int SSERIAL_TX_PIN = 11;  //Soft Serial Transmit pin
+const int SSERIAL_CTRL_PIN= 3;   //RS485 Direction control
+const int LED_PIN = 13;
+const int RS485_TRANSMIT = HIGH;
+const int RS485_RECEIVE = LOW;
 String parsivel_data;
 char* parsivel_intensity;
 /////////////////////////
@@ -321,7 +328,7 @@ else if (comm =='k'){
   Serial.println("Send");
   http.addInt("LevelReading1", 2, "mems");
   Serial.println(http.getData());
-  xbeeSerial.println(http.getData());
+  xbeeSerial.print(http.getData());
   http.clearData();
 }
 else if (comm == '0'){
@@ -353,7 +360,7 @@ void testPost() //post Data to VIPER
     */
     //http.addInt("Bottle Number", getBottleNumber(), "/24");
     //http.addFloat("Battery Voltage", getBV(), "V");
-    http.addInt("Level Reading", 50, " 0/50");
+    http.addInt("LevelReading", 50, " 0/50");
     //http.addString("Parsivel Intensity",parsivel_intensity, "mm/h");
     xbeeSerial.println(http.getData());
    // xbeeSerial->println("P"http.getData());  //backup solution
@@ -452,10 +459,11 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   int ind = 0;
   String msg;
   String return_msg;
- while (xbeeSerial.available()){
- msg[ind++]=xbeeSerial.read();
+ if (xbeeSerial.available()){
+ msg=xbeeSerial.readString();
  }
  msg.trim();
+ //msg.substring(0,2);
  // may need to add \0 later
  if (msg == "C1"){
  
@@ -1249,7 +1257,7 @@ void I2C_rain(){
 #endif
 
 void changeAddress(){
-  moistureSensor.changeAddress(1);
+  moistureSensor.changeAddress(2);
 }
 
 void checkHydraProbes()
