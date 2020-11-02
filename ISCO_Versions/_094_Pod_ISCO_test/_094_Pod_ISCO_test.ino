@@ -92,11 +92,11 @@ int sender_count = 0;
 const int SSERIAL_RX_PIN = 10;  //Soft Serial Receive pin
 const int SSERIAL_TX_PIN = 11;  //Soft Serial Transmit pin
 const int SSERIAL_CTRL_PIN= 3;   //RS485 Direction control
-const int LED_PIN = 13;
 const int RS485_TRANSMIT = HIGH;
 const int RS485_RECEIVE = LOW;
 String parsivel_data;
 char* parsivel_intensity;
+SoftwareSerial ParsivelSerial(SSERIAL_RX_PIN, SSERIAL_TX_PIN); // RX, TX
 /////////////////////////
 
 //DAVIS RAINBUCKET
@@ -263,6 +263,7 @@ void setup() {
  
   iscoSerial.begin(9600); //Setup comms with ISCO
   parsivelSerial.begin(19200);
+  ParsivelSerial.begin(19200);
   Watchdog.reset();
   setup_parsivel();
 }
