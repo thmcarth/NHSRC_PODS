@@ -54,7 +54,7 @@ if (_p_debug)  Serial.println("Setup complete...Ready for command measurement");
  }else
  {
   Serial.println("Failed");
-  Serial.println("Parsivel failed to initialize");
+  Serial.println("Parsivel failed to initialize: ");
   Serial.println(sdiResponse);
   _pReady = false;
  }
@@ -121,7 +121,7 @@ int z=0;
       ++z;
   }
   }
-  delay(9000);   
+  delay(1000);   
  if (_p_debug) if (sizeof(sdiResponse) > 1) Serial.println(sdiResponse); //write the response to the screen
   mySDI12.clearBuffer();
   Serial.println("Requested new measurement");
@@ -191,7 +191,7 @@ return _p_permittivity;
 
 
 
-void Parsivel::parseResponse(){
+void Parsivel::parseResponse1(){
 char Intensity[10];
 char tempIn[10];
 char moistureIn[10];
@@ -222,7 +222,7 @@ takeMeasurement();
       ++z;
   }
   }
-  myCommand = String(_address) + "D1!";
+  //myCommand = String(_address) + "D1!";
   //Serial.println(z);
 if (_p_debug)
 {

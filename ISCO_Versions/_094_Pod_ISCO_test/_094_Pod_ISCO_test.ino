@@ -1,12 +1,13 @@
+#include <Parsivel.h>
 #include <HydraProbe.h>
 #include <Adafruit_INA260.h>
 #include <HTTPS_VIPER.h>
 //#include <Adafruit_FONA.h>
 #include <Timezone.h>
-#include <Time.h>
+//#include <Time.h>
 #include <TimeLib.h>
 //#include <Ubidots_FONA.h>
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
 
 
 /* * Teensy 3.5 Custom PCB developed to automate ISCO 6700 Sampling with a digital output pin
@@ -96,7 +97,7 @@ const int RS485_TRANSMIT = HIGH;
 const int RS485_RECEIVE = LOW;
 String parsivel_data;
 char* parsivel_intensity;
-SoftwareSerial ParsivelSerial(SSERIAL_RX_PIN, SSERIAL_TX_PIN); // RX, TX
+//SoftwareSerial ParsivelSerial(SSERIAL_RX_PIN, SSERIAL_TX_PIN); // RX, TX
 int byteReceived;
 int byteSent;
 /////////////////////////
@@ -128,6 +129,13 @@ bool HPRail = true;
 unsigned long lastProbe = millis();
 int Probetime = 60000;
 //
+
+////Parsivel SDI
+Parsivel parsivel;
+
+////
+
+
 //FONA HTTP
 HTTPS_VIPER http = HTTPS_VIPER(); 
 char senderNum[30];    //holds number of last number to text SIM
@@ -231,6 +239,8 @@ void setup() {
   pinMode(BattRail_VIN, INPUT);
   digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
   delay(500);
+  parsivel.debugOn();
+  parsivel.begin(4);
   moistureSensor.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
   moistureSensor.begin(0);
   Watchdog.reset();
@@ -265,8 +275,8 @@ void setup() {
  
   iscoSerial.begin(9600); //Setup comms with ISCO
   parsivelSerial.begin(19200);
-  digitalWrite(SSERIAL_CTRL_PIN, RS485_RECEIVE);  // Put RS485 in receive mode
-  ParsivelSerial.begin(19200);
+  //digitalWrite(SSERIAL_CTRL_PIN, RS485_RECEIVE);  // Put RS485 in receive mode
+  //ParsivelSerial.begin(19200);
   Watchdog.reset();
   setup_parsivel();
 }
@@ -336,7 +346,8 @@ else if (comm =='k'){
   http.clearData();
 }
 else if (comm == '0'){
-  parsivelSerial.print("CS/I/0");
+  
+  Serial.println(parsivel.getAddress());
 }
 else if(comm == 13){
   //
@@ -403,13 +414,13 @@ void setup_parsivel() { // Tells the Parsivel through serial message how we want
 
 void read_parsivel(){
   Serial.println("Start Reading");
-  String message = "";
-  int i = 0;
-  while (ParsivelSerial.available()){
-   message = ""+ message + ParsivelSerial.read()+ "";
-  }
-  parsivel_data = message;
-  parsivel_intensity = parse_Intensity(message);
+ // String message = "";
+  //int i = 0;
+ // while (ParsivelSerial.available()){
+  // message = ""+ message + ParsivelSerial.read()+ "";
+ // }
+  //parsivel_data = message;
+ // parsivel_intensity = parse_Intensity(message);
   Serial.println("Done Reading");
 }
 

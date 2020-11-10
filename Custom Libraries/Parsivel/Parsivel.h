@@ -126,7 +126,8 @@ class Parsivel
   bool _p_debug;
   Parsivel()
 {
-  sdiResponse[50];
+	_p_intensity=0;
+  sdiResponse[150];
   myCommand = "";
   _p_temp=0;
   _p_moisture=0;
@@ -138,7 +139,8 @@ class Parsivel
 }
   
   void begin(int _SENSOR_ADDRESS);
-  void parseResponse();
+  void parseResponse1();
+  void parseResponse2();
   void changeAddress(int to);
   bool getpStatus();
   int getAddress();
