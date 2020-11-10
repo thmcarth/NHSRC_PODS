@@ -33,9 +33,9 @@ void setup()
  // pinMode(LED_PIN, OUTPUT);     // Configure any output pins
   pinMode(SSERIAL_CTRL_PIN, OUTPUT);    
   delay(3);
-  digitalWrite(SSERIAL_CTRL_PIN, RS485_RECEIVE);  // Put RS485 in receive mode  
+  digitalWrite(8, LOW);  // Put RS485 in receive mode  
   
-  RS485Serial.begin(9600);   // Start the RS485 soft serial port 
+  parsivelSerial.begin(1200);   // Start the RS485 soft serial port 
 }
 //===============================================================================
 //  Main
@@ -51,15 +51,15 @@ void loop()
     delay(1);          
     RS485Serial.print(byteReceived);                 // Send byte to Remote Arduino
     delay(1);                                        // Wait before going back to Receive mode
-    digitalWrite(SSERIAL_CTRL_PIN, RS485_RECEIVE);   // Put RS485 back into Receive mode    
+    digitalWrite(8, LOW);   // Put RS485 back into Receive mode    
   }
   
-  if (RS485Serial.available())            //Data from the Slave is available
+  if (parsivelSerial.available())            //Data from the Slave is available
    {
-     digitalWrite(SSERIAL_CTRL_PIN, RS485_RECEIVE);
+     digitalWrite(8, LOW);
      delay(10);
-    byteReceived = RS485Serial.read();    // Read received byte
+    byteReceived = RS485Serial.readString();    // Read received byte
     Serial.print(byteReceived);           // Show on Serial Monitor
    }  
-   delay(1);
+   delay(1000);
 }
