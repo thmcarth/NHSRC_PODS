@@ -116,23 +116,22 @@ class Parsivel
  public:
   char sdiResponse[50];
   String myCommand;
-  float _p_intensity;
-  float _p_temp;
-  float _p_moisture;
-  float _p_conductivity;
- float _p_permittivity;
+  String _p_intensity;
+  String _p_accumulate;
+  String _p_particleNum;
+  String _p_kinetic;
   bool _pReady;
   int _address;
   bool _p_debug;
   Parsivel()
 {
-	_p_intensity=0;
+	
   sdiResponse[150];
   myCommand = "";
-  _p_temp=0;
-  _p_moisture=0;
-  _p_conductivity=0;
-  _p_permittivity=0;
+  _p_intensity=0;
+  _p_accumulate=0;
+  _p_particleNum=0;
+  _p_kinetic=0;
    _pReady = false;
   _address=0;
   _p_debug = false;
@@ -144,11 +143,11 @@ class Parsivel
   void changeAddress(int to);
   bool getpStatus();
   int getAddress();
-  float getTemp();
-  float getMoisture();
-  float getConductivity();
-  float getPermittivity();
-  float getIntensity();
+  String getTemp();
+  String getMoisture();
+  String getConductivity();
+  String getPermittivity();
+  String getIntensity();
   void debugOn();
   void debugOff();
   //int p_dataPin;

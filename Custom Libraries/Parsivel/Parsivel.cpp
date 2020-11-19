@@ -7,7 +7,7 @@ Parsivel Library
 #include <Arduino.h>
 #include <stdlib.h>
 #include <Parsivel.h>
-
+#include <string>
 
 
 SDI12 mySDI12(p_dataPin);
@@ -91,13 +91,20 @@ int z=0;
       ++z;
   }
   }
-  delay(9000);   
+  delay(9000); 
+	while (mySDI12.available()) {  // build response string
+    char c = mySDI12.read();
+    if ((c != '\n') && (c != '\r')) {
+      sdiResponse[z] = c;
+      delay(5);
+      ++z;
+  }
+  }  
  if (_p_debug) if (sizeof(sdiResponse) > 1) Serial.println(sdiResponse); //write the response to the screen
   mySDI12.clearBuffer();
   Serial.println("Requested new measurement");
 
-
-  delay(2000);                 // delay between taking reading and requesting data
+               // delay between taking reading and requesting data
   sprintf(sdiResponse,"%s","");           // clear the response string
 
 }
@@ -165,23 +172,23 @@ _address = to;
 
 }
 
-float Parsivel::getIntensity()
+String Parsivel::getIntensity()
 {
 	return _p_intensity;
 }
-float Parsivel::getTemp()
+String Parsivel::getTemp()
 {
 return _p_temp;  
 }
-float Parsivel::getMoisture()
+String Parsivel::getMoisture()
 {
 return _p_moisture;  
 }
-float Parsivel::getConductivity()
+String Parsivel::getConductivity()
 {
 return _p_conductivity;  
 }
-float Parsivel::getPermittivity()
+String Parsivel::getPermittivity()
 {
 return _p_permittivity;  
 }
@@ -192,12 +199,10 @@ return _p_permittivity;
 
 
 void Parsivel::parseResponse1(){
-char Intensity[10];
-char tempIn[10];
-char moistureIn[10];
-char conductivityIn[10];
-char permittivityIn[10];
-int plusCount = 0;
+string intensity;
+string accumulate;
+string particleNum;
+int commaNum = 0;
 int a=0;
 int b=0;
 int c=0;
@@ -222,8 +227,7 @@ takeMeasurement();
       ++z;
   }
   }
-  //myCommand = String(_address) + "D1!";
-  //Serial.println(z);
+ 
 if (_p_debug)
 {
  	if (z > 1) 
@@ -238,78 +242,288 @@ if (_p_debug)
 }
   mySDI12.clearBuffer();
 
-
+ int data_len = 0;
+ int data_pos = 0;
+ int last_comma =0;
 Serial.println(sizeof(sdiResponse));
-for (int y=0 ; y<sizeof(sdiResponse) ; y++)
+string data = sdiResponse;
+for (int y=0 ; y < data.length(); y++)
 {
 	
-	
-  /* char h = sdiResponse[y];
-  if ( h =='+')
-  {
-    ++plusCount;
-  }else
-  {
-    switch (plusCount){
-      case 1:    //moisture
-        if (a<sizeof(moistureIn))
-      {
-      moistureIn[a] = h;
-      }
-      ++a;
+   char h = data.at(y)
+ 
+  if ( h ==','){ ++commaNum;
+  
+    switch (commaNum){
+	  
+	  case 1:   
+	  intensity = data.substr(data_pos,data_len);
+	  data_len = 0;
+	  last_comma = y;
+	  data_pos = y+1
       break;
-      
       case 2:    //temp
-        if (b<sizeof(tempIn))
-      {
-      tempIn[b] = h;
-      }
-       ++b;
+	  
+       accumulate = data.substr(data_pos,data_len);
+	    data_len = 0;
+	  last_comma = y;
+	  data_pos = y+1
       break;
      
-      
-      case 3:    //conductivity
-      if (c<sizeof(conductivityIn))
-      {
-      conductivityIn[c] = h;
-      }
-      ++c;
-      break;
-  case 4:    //permittivity
-      if (c<sizeof(permittivityIn))
-      {
-      permittivityIn[d] = h;
-      }
-      ++d;
-      break;
-      default:;
+      default:
+	  
+	  break;
       
     }
-    
-  } */
-}
+	
+  }
+  else
+    data_len++;
+  }
+  _p_intensity = intensity;
+  _p_accumulate - accumulate;
+ 
 
 if (_p_debug)
 {
   
-  Serial.println(tempIn);
-  Serial.println(a);
-  Serial.println(b);
-  Serial.println(c);
-  Serial.println(moistureIn);
-  Serial.println(conductivityIn);
-  Serial.println(permittivityIn);
+  Serial.println(intensity);
+  Serial.println(accumulate);
+ 
   
-  Serial.print("Temp = ");Serial.print(_p_temp);Serial.println(" deg C");
-  Serial.print("Moisture = ");Serial.print(_p_moisture*100);Serial.println(" %");
-  Serial.print("Conductivity = ");Serial.print(_p_conductivity);Serial.println(" S/m");
-  Serial.print("Permittivity = ");Serial.println(_p_permittivity);
+  Serial.print("Intensity = ");Serial.print(_p_temp);Serial.println(" mm/h");
+  Serial.print("Accumulate = ");Serial.print(_p_moisture);Serial.println(" mm");
+ 
 }
-  sprintf(tempIn,"%s","");           // clear the temp string
-  sprintf(moistureIn,"%s","");           // clear the moisture string
-  sprintf(conductivityIn,"%s","");           // clear the conductivity string
- sprintf(permittivityIn,"%s","");           // clear the permittivity string
- }
+  sprintf(intensity,"%s","");           // clear the intensity string
+  sprintf(accumulate,"%s","");           // clear the accumulate string
+  sprintf(particleNum,"%s","");           // clear the particlenum string
+  sprintf(sdiResponse,"%s","");
+  
+   myCommand = String(_address) + "D1!";
+   Serial.println(z);
+   if (_p_debug) Serial.println(myCommand);  // echo command to terminal
+   mySDI12.sendCommand(myCommand);
+   delay(100);                     // wait a while for a response
+   
+   int  z=0;
+  while (mySDI12.available()) {  // build response string
+    char c = mySDI12.read();
+    if ((c != '\n') && (c != '\r')) {
+      sdiResponse[z] = c;
+      delay(5);
+      ++z;
+  }
+  }
+   mySDI12.clearBuffer();
+
+ int data_len = 0;
+ int data_pos = 0;
+ int last_comma =0;
+Serial.println(sizeof(sdiResponse));
+string data = sdiResponse;
+commaNum = 0;
+for (int y=0 ; y < data.length(); y++)
+{
+	
+   char h = data.at(y)
+ 
+  if ( h ==','){ 
+  ++commaNum;
+    switch (commaNum){
+	  
+	  case 1:   
+	  last_comma = y;
+	  data_pos = y+1
+	  data_len = 0;
+      break;
+      
+      case 2:    //particleNum
+      particleNum = data.substr(data_pos,data_len);
+	  data_len = 0;
+	  last_comma = y;
+	  data_pos = y+1
+      break;
+     
+      default:
+	  
+	  break;
+      
+    }
+  }
+  else 
+  data_len++;
+  } 
+  
+  _p_particleNum = particleNum;
+ sprintf(particleNum,"%s","");           // clear the particlenum string
+  sprintf(sdiResponse,"%s","");
+}   
+
+
+void Parsivel::parseResponse2(){
+string intensity;
+string accumulate;
+string particleNum;
+int commaNum = 0;
+int a=0;
+int b=0;
+int c=0;
+int d=0;
+
+takeMeasurement();
+
+//Request Data Response from last Measurement
+
+  myCommand = String(_address) + "D0!";
+ if (_p_debug) Serial.println(myCommand);  // echo command to terminal
+
+  mySDI12.sendCommand(myCommand);
+  delay(2000);                     // wait a while for a response
+
+ int  z=0;
+  while (mySDI12.available()) {  // build response string
+    char c = mySDI12.read();
+    if ((c != '\n') && (c != '\r')) {
+      sdiResponse[z] = c;
+      delay(5);
+      ++z;
+  }
+  }
+ 
+if (_p_debug)
+{
+ 	if (z > 1) 
+	{
+	Serial.println(sdiResponse); //write the response to the screen
+	Serial.println("Response Received");
+	}else
+	{
+	Serial.println("No response from Get Data Request");
+	}
+
+}
+  mySDI12.clearBuffer();
+
+ int data_len = 0;
+ int data_pos = 0;
+ int last_comma =0;
+Serial.println(sizeof(sdiResponse));
+string data = sdiResponse;
+for (int y=0 ; y < data.length(); y++)
+{
+	
+   char h = data.at(y)
+ 
+  if ( h ==','){ ++commaNum;
+  
+    switch (commaNum){
+	  
+	  case 1:   
+	  intensity = data.substr(data_pos,data_len);
+	  data_len = 0;
+	  last_comma = y;
+	  data_pos = y+1
+      break;
+      case 2:    //temp
+	  
+       accumulate = data.substr(data_pos,data_len);
+	    data_len = 0;
+	  last_comma = y;
+	  data_pos = y+1
+      break;
+     
+      default:
+	  
+	  break;
+      
+    }
+	
+  }
+  else
+    data_len++;
+  }
+  _p_intensity = intensity;
+  _p_accumulate - accumulate;
+ 
+
+if (_p_debug)
+{
+  
+  Serial.println(intensity);
+  Serial.println(accumulate);
+ 
+  
+  Serial.print("Intensity = ");Serial.print(_p_temp);Serial.println(" mm/h");
+  Serial.print("Accumulate = ");Serial.print(_p_moisture);Serial.println(" mm");
+ 
+}
+  sprintf(intensity,"%s","");           // clear the intensity string
+  sprintf(accumulate,"%s","");           // clear the accumulate string
+  sprintf(particleNum,"%s","");           // clear the particlenum string
+  sprintf(sdiResponse,"%s","");
+  
+   myCommand = String(_address) + "D1!";
+   Serial.println(z);
+   if (_p_debug) Serial.println(myCommand);  // echo command to terminal
+   mySDI12.sendCommand(myCommand);
+   delay(100);                     // wait a while for a response
+   
+   int  z=0;
+  while (mySDI12.available()) {  // build response string
+    char c = mySDI12.read();
+    if ((c != '\n') && (c != '\r')) {
+      sdiResponse[z] = c;
+      delay(5);
+      ++z;
+  }
+  }
+   mySDI12.clearBuffer();
+
+ int data_len = 0;
+ int data_pos = 0;
+ int last_comma =0;
+Serial.println(sizeof(sdiResponse));
+string data = sdiResponse;
+commaNum = 0;
+for (int y=0 ; y < data.length(); y++)
+{
+	
+   char h = data.at(y)
+ 
+  if ( h ==','){ 
+  ++commaNum;
+    switch (commaNum){
+	  
+	  case 1:   
+	  last_comma = y;
+	  data_pos = y+1
+	  data_len = 0;
+      break;
+      
+      case 2:    //particleNum
+      particleNum = data.substr(data_pos,data_len);
+	  data_len = 0;
+	  last_comma = y;
+	  data_pos = y+1
+      break;
+     
+      default:
+	  
+	  break;
+      
+    }
+  }
+  else 
+  data_len++;
+  } 
+  
+  _p_particleNum = particleNum;
+ sprintf(particleNum,"%s","");           // clear the particlenum string
+  sprintf(sdiResponse,"%s","");
+}   
+
+
 
 void Parsivel::debugOn()
 {

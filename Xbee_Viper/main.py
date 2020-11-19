@@ -179,6 +179,9 @@ def read_serial():
         elif types is 2:  # send to users
             serial = serial[1:]
             send_text(serial)
+        elif types is 3:  # send to all users
+            serial = serial[1:]
+            send_text_all(serial)
     else:
         return 0
 
@@ -193,7 +196,8 @@ def check_serial_type(msg):
         first = first.lower()
         switcher = {
             "p": 1,
-            "c": 2
+            "c": 2,
+            "a": 3
         }
         return switcher.get(first, 0)
 
@@ -396,7 +400,24 @@ def send_text(msg, sms):
         -------
         None
         """
-    c.sms_send(sms['sender'], msg)
+    if c.isconnected():
+        c.sms_send(sms['sender'], msg)
+
+def send_text_all(msg):
+    """Sends a text message back to most recent user
+
+            Parameters
+            ----------
+           msg: message we want to send to phone
+           sms: sms object that xbee uses to store sender information
+
+            Returns
+            -------
+            None
+         """
+    if c.isconnected():
+        for each in allowed:
+            c.sms_send(each, msg)
 
 
 def get_post_length(post):

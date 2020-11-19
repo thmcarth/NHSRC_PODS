@@ -1,6 +1,7 @@
 #include <Adafruit_INA260.h>
 #include <HTTPS_VIPER.h>
 //#include <Adafruit_FONA.h>
+#include <HydraProbe.h>
 #include <Timezone.h>
 #include <Time.h>
 #include <TimeLib.h>
@@ -17,8 +18,7 @@
  * Grab Sampling Mode - Pulses pin whenever a grab sample is initiated by SMS command
 
 
-  Tim McArthur
-
+Hawes Collier
 */
 //094 Pod code Version 0.1 - Cleaned up working code and added watchdog to testing unit. 2/21/18 - Tim McArthur
 //Version 1.0  - Cleaned up variable/function names and logic. 4/11/2018 - Tim McArthur
@@ -31,11 +31,10 @@
 //Version 1.04 - Daylight Savings time, confirm Google number functions properly.
 
 
-
 //GPS and unit values iused in VIPER Post
 
 char GPS[] = "40.5087450, -74.3580650 0"; //needs a (space 0) at the end, example ="35.068471,-89.944730 0"
-int unit = 6;
+int unit = 1;
 char versionNum[] = "_094_Pod_ISCOv1.06";
 
 //////////////////////////////////
@@ -101,6 +100,7 @@ int byteSent;
 /////////////////////////
 
 //DAVIS RAINBUCKET
+float inch_tips;
 #define DAVIS 0
 ///////////////I2C Comms
 #include <Wire.h>
@@ -109,7 +109,7 @@ unsigned long UpdateRate = 4000; //Number of ms between serial prints, 4 seconds
 uint8_t ADR = 0x08; //Address of slave device, 0x08 by default
 long rain_period = 30000;
 long previousMillis = 0; 
-int rain_level = 0; //0 is no rain, 1 is little, 2 is some, 3 is lots of rain 
+String rain_level = ""; //0 is no rain, 1 is little, 2 is some, 3 is lots of rain 
 int droplet_pin = 10;
 //INA260 comms Placeholder
 //////////////END I2C Inits
@@ -117,9 +117,14 @@ int droplet_pin = 10;
 
 //Hydraprobes
 #define HydraSerial Serial3
-String moisture;
 unsigned long lastProbe = millis();
 int Probetime = 60000;
+float temp= 0, moisture= 0, conductivity = 0,permittivity =0;
+float temp2= 0, moisture2= 0, conductivity2= 0,permittivity2 = 0;
+float temp3= 0, moisture3= 0, conductivity3= 0,permittivity3 = 0;
+HydraProbe moistureSensor;  //define data Pin in Header (library .h file)
+HydraProbe moistureSensor2;
+HydraProbe moistureSensor3;
 //
 //FONA HTTP
 HTTPS_VIPER http = HTTPS_VIPER(); 
@@ -183,9 +188,9 @@ int levelReading;
 unsigned long iscoTimeout = millis();
 /////////////////ISCO
 
-
+bool SDcard = true;
 ///////////////////////////RELAYS
-bool RQ30 = true;
+bool RQ30 = false;
 //Soil moisture is on pin 30
 #define HPdata 30
 #define HPRelay 27 //Outpin PIN to control HydraProbe 12V Rail
@@ -211,6 +216,7 @@ void setup() {
   Serial.print("Initializing SD card...");  //startup SD card
 
   if (!SD.begin(chipSelect)) {
+    SDcard = false;
     Serial.println("initialization failed!");
   }
   Serial.println("SD Card initialization done.");
@@ -224,9 +230,9 @@ void setup() {
   pinMode(BattRail_VIN, INPUT);
   digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
   Watchdog.reset();
-  setup_parsivel();// Setup Parsivel output string
+  //setup_parsivel();// Setup Parsivel output string
   
-  #if FIRST  //change FIRST to 1 when uploading and running first time
+ /* #if FIRST  //change FIRST to 1 when uploading and running first time
   EEPROM.write(eepromfirst_upload, 0);
   is_first = 1;
   #endif
@@ -242,6 +248,9 @@ void setup() {
     grabSampleMode = false;
     grabSampleInterval = 1;
   }
+  */
+
+  // if grabSample is in true this doesn't do anything
   Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println("minutes");
   xbeeSerial.begin(9600); //Startup SMS and Cell client
   
@@ -249,16 +258,19 @@ void setup() {
   digitalWrite(IscoSamplePin, LOW);
   Serial.begin(9600);
   iscoSerial.begin(9600); //Setup comms with ISCO
-  parsivelSerial.begin(19200);
+  //parsivelSerial.begin(19200);
   Watchdog.reset();
+  //delay(5000);
+  //massSMS("Testing WET Board mass Text (from Teensy)");
 }
 
 void loop() {
   unsigned long currentTime = millis();
     Watchdog.reset();
+    
   if (ISCORail) // this is true at start
   {
-    //Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
+    Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
     do {
       Watchdog.reset();
     } while (iscoSerial.available() == 0 && millis() - iscoTimeout < 40000); //If there is data on the serial line, OR its been 40 seconds, continue
@@ -271,15 +283,15 @@ void loop() {
   {
     delay(5000); //If ISCORail is disabled , wait 5 seconds every loop
   }
-  
+  Serial.println("Checking texts...");
   checkTexts(); //check for SMS commands
   Watchdog.reset(); //ensure the system doesn't prematurely reset
-  
+  Serial.println("Made it past Texts");
   checkUserInput(); //check Serial for input commands
   getBV(); //get voltage rail readings
  
 
-  if (currentTime - lastPost > minsToPost * 60000) //Post data every (minsToPost) minutes
+  if (currentTime - lastPost > /*minsToPost */ 60000) //Post data every (minsToPost) minutes
   { // at the moment we post every 1 minute   
     postData();
     lastPost = millis(); //reset timer
@@ -303,26 +315,19 @@ if(currentWaterMillis - previousMillis > rain_period) {
    checkHydraProbes();
    lastProbe = millis();
   }
-#if RQ
-  if (currentTime - lastRQ > RQTime){
-    //getRQ30();
-    lastRQ = millis();
-  }
-#endif
-
-#if PARSIVEL
-if (currentTime - lastParsivel >  Parsiveltime){
-   read_parsivel();
-   lastParsivel = millis();
-  }
-#endif
+//#if RQ
+//  if (currentTime - lastRQ > RQTime){
+//    //getRQ30();
+//    lastRQ = millis();
+//  }
+//#endif
 
   if (millis() - lastSave > minsToSave * 60000) //Save data every (minsToSave) minutes (1 mins)
   {
     Serial.println("----------");
     Serial.println("SAVING");
     Serial.println("----------");
-    saveData();
+    if (SDcard) saveData();
     lastSave = millis();
   }
   if (grabSampleMode) //Display sample mode on Serial Monitor 
@@ -332,7 +337,7 @@ if (currentTime - lastParsivel >  Parsiveltime){
   {
     Serial.println("------------------Currently in AUTO Sample Mode--------------------");
   }
-
+  Serial.println("Here PRe Water level");
   if (getWaterLevel()) //If there is water in the pan......
   {
     Serial.println(" Water detected in Pan");
@@ -377,7 +382,8 @@ if (currentTime - lastParsivel >  Parsiveltime){
   } */
 
   clearIscoSerial();
-  cleararray(iscoData);
+ cleararray(iscoData);
+ Serial.println("Here_end_loop");
 }
 
 void setup_parsivel() { // Tells the Parsivel through serial message how we want to get the telegram data from it
@@ -430,27 +436,22 @@ for ( i = 0; i < len; i++)
  return intensity;
 }
 
-void checkHydraProbes(){
-// Serial Println style commands here: over the Serial Port we will need: commands /r/n
-HydraSerial.println("AAATR");
-//char reading[100]; 
-//int i = 0;
-String values="";
-while (HydraSerial.available()){
- values += HydraSerial.readString();
-}
-moisture = values;
-}
-
 void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
 {
   int ind = 0;
   String msg;
   String return_msg;
  while (xbeeSerial.available()){
- msg[ind++]=xbeeSerial.read();
+ msg[ind]=xbeeSerial.read();
+ ind++;
  }
  msg.trim();
+ Serial.print("msg is: " + msg + " length is ");
+ Serial.println(msg.length());
+ if (msg.length() == 0){
+  Serial.println("No valid messages");
+  return;
+ }
  // may need to add \0 later
  if (msg == "C1"){
  
@@ -461,7 +462,7 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
 
 else if (msg =="C2"){
   Sample();
-  return_msg = "Sampling...";
+  return_msg = "Sampling";
   sendSMS(return_msg);
  }
  
@@ -469,12 +470,12 @@ else if (msg =="C3"){
  if (ISCORail)
       {
         ISCORail = false;  
-        return_msg = "turned off";
+        return_msg = "turned off ISCO";
         sendSMS(return_msg);
       } else
       {
         ISCORail = true;
-        return_msg = "turned on";
+        return_msg = "turned on ISCO";
         sendSMS(return_msg);
       }
  }
@@ -531,6 +532,10 @@ else if (msg.substring(0,3)=="C9_"){
 else if (msg.substring(0,3)=="C10_"){
 
 }
+else{
+  Serial.println("No valid messages");
+  return;
+}
 
 }
 
@@ -540,107 +545,15 @@ else if (msg.substring(0,3)=="C10_"){
 
 ///////////////////////////////***********************Xbee FUNCTIONS
 /*** SMS ***/
-char* readSMSNum() {  //read in the number of text messages on the buffer and send back
-  // read the number of SMS's!
-  int smsnum;
-  char response[50];
-  flushxbeeSerial();
-  //Serial.println("Writing AT Command to Serial 1");
-  delay(50);
-  int index = 0;
-  char num;
-  while (xbeeSerial.available())
-  {
-    num = xbeeSerial.read();
-    response[index] = num;
-  }
-  
-    return response;
-  }
 
-
-
-
-int readSMS(int8_t number) { //read the SMS into the replybuffer and parse the command number
-  boolean respond = false;
-  // read an SMS
-  //Serial.print(F("Read #"));
-  Serial.print(F("\n\rReading SMS #")); Serial.println(number);  // Retrieve SMS sender address/phone number.
-
-}
-
-int deleteSMS(int8_t number) { //delete the SMS number
- return 1;
-
-}
-
-bool sendSMS(String message) {
+void sendSMS(String message) {
   // send an SMS!
- xbeeSerial.print("C");
-  xbeeSerial.println(message);
+  xbeeSerial.print("C"+ message);
 }
 
-bool massSMS(String message) {
+void massSMS(String message) {
   // send an SMS!
- xbeeSerial.print("A");
-  xbeeSerial.println(message);
-}
-
-uint8_t readline(char *buff, uint8_t maxbuff, uint16_t timeout) {
-  uint16_t buffidx = 0;
-  boolean timeoutvalid = true;
-  if (timeout == 0) timeoutvalid = false;
-
-  while (true) {
-    if (buffidx > maxbuff) {
-      //Serial.println(F("SPACE"));
-      break;
-    }
-
-    while (Serial.available()) {
-      char c =  Serial.read();
-
-      //Serial.print(c, HEX); Serial.print("#"); Serial.println(c);
-
-      if (c == '\r') continue;
-      if (c == 0xA) {
-        if (buffidx == 0)   // the first 0x0A is ignored
-          continue;
-
-        timeout = 0;         // the second 0x0A is the end of the line
-        timeoutvalid = true;
-        break;
-      }
-      buff[buffidx] = c;
-      buffidx++;
-    }
-
-    if (timeoutvalid && timeout == 0) {
-      //Serial.println(F("TIMEOUT"));
-      break;
-    }
-    delay(1);
-  }
-  buff[buffidx] = 0;  // null term
-  return buffidx;
-}
-
-bool sendXbee(char* message)
-{
-  char a;
-  flushxbeeSerial();
-  xbeeSerial.println(message);
-  while (xbeeSerial.available())
-    a = xbeeSerial.read();
-  if (a == '0' || a == false)
-  {
-    return false;
-  }
-  if (a == '1' || a == true)
-  {
-    return true;
-  }
-
+  xbeeSerial.print("A"+message);
 }
 
 void flushxbeeSerial() { // flush xbee Serial port
@@ -939,18 +852,40 @@ void postData() //post Data to VIPER
     int intWL;
     if (getWaterLevel()) //Transpose the water level to 50 (wet) or 0 (dry) for viewing on VIPER
     {
-      intWL = 50;
-      levelReading = 50;
+      intWL = 1;
+      levelReading = 1;
     } else
     {
       intWL = 0;
       levelReading = 0;
     }
+    
+    // format addX
     http.addInt("Bottle Number", getBottleNumber(), "/24");
     http.addFloat("Battery Voltage", getBV(), "V");
     http.addInt("Level Reading", intWL, " 0/50");
-    http.addString("Parsivel Intensity",parsivel_intensity, "mm/h");
-    xbeeSerial.println(http.getData());
+    http.addFloat("Davis Rain Intensity", inch_tips, "inches");
+    http.addFloat("HProbe1 Temp",temp, "°C");
+    http.addFloat("HProbe1 Moisture",moisture*100 ,"%"); 
+    http.addFloat("HProbe1 Conductivity",conductivity, "S/m");
+    http.addFloat("HProbe1 Permittivity",permittivity, "Dielectric Units");
+    http.addFloat("HProbe2 Temp",temp2, "°C");
+    http.addFloat("HProbe2 Moisture",moisture2*100,"%"); 
+    http.addFloat("HProbe2 Conductivity",conductivity2, "S/m");
+    http.addFloat("HProbe2 Permittivity",permittivity2, "Dielectric Units");
+    http.addFloat("HProbe3 Temp",temp3, "°C");
+    http.addFloat("HProbe3 Moisture",moisture3*100,"%"); 
+    http.addFloat("HProbe3 Conductivity",conductivity3, "S/m");
+    http.addFloat("HProbe3 Permittivity",permittivity3, "Dielectric Units");
+Serial.print("data: " );Serial.print(getBottleNumber());Serial.print(",");
+Serial.print(getBV());Serial.print(",");Serial.print(intWL);Serial.print(",");
+Serial.print(inch_tips);Serial.print(",");Serial.print(temp);Serial.print(",");
+Serial.print(moisture*100);Serial.print(",");Serial.print(conductivity);Serial.print(",");
+Serial.print(permittivity);Serial.print(",");Serial.print(temp2);Serial.print(",");
+Serial.print(moisture2*100);Serial.print(",");Serial.print(conductivity2);Serial.print(",");
+Serial.print(permittivity2);Serial.print(",");Serial.print(temp3);Serial.print(",");
+Serial.print(moisture3*100);Serial.print(",");Serial.print(conductivity3);Serial.print(",");Serial.println(permittivity3);
+    xbeeSerial.print(http.getData());
    // xbeeSerial.println("P"http.getData());  //backup solution
 
 }
@@ -992,7 +927,7 @@ void saveData() {
     buildDateTime();
     setfileName();
   }
-
+  String batt = getBV();
   dtostrf(BattVoltage, 3, 2, bVChar);
 
   sprintf(levelChar, "%i", levelReading);
@@ -1016,14 +951,15 @@ void saveData() {
       Serial.println("Writing header");   //Write headers
       Serial.println("");
 
-      myFile.print("## BOSS Unit ");
+      myFile.print("## WET BOARD Unit ");
       myFile.print(unit);
       myFile.println(" ## ");
       myFile.println("");
       //int localHours = hour(local);
       //int utcHours = hour(utc);
 
-      myFile.println("TIMESTAMP(EST),BottleNumber (/24),level Reading (/1024),Battery Voltage (V)");
+      myFile.print("TIMESTAMP(EST),BottleNumber (/24),level Reading (0/1),Battery Voltage (V), rain level,Probe1_temp, Probe1_moisture, Probe1_conductivity, Probe1_permitivity,");
+      myFile.println("Probe2_temp, Probe2_moisture, Probe2_conductivity, Probe2_permitivity,Probe3_temp, Probe3_moisture, Probe3_conductivity, Probe3_permitivity");
     }
     delay(10);
     buildDateTime();
@@ -1033,9 +969,32 @@ void saveData() {
     myFile.print(",");
     myFile.print(levelChar);
     myFile.print(",");
-    myFile.print(bVChar);
+    myFile.print(batt);
     myFile.print(",");
-    myFile.print(parsivel_data);
+    myFile.print(rain_level);
+    myFile.print(",");
+    myFile.print(temp);
+    myFile.print(",");
+    myFile.print(moisture);
+    myFile.print(",");
+    myFile.print(conductivity);
+    myFile.print(",");
+    myFile.print(permittivity);
+    myFile.print(",");
+    myFile.print(temp2);
+    myFile.print(",");
+    myFile.print(moisture2);
+    myFile.print(",");
+    myFile.print(conductivity2);
+    myFile.print(",");
+    myFile.print(permittivity2);
+    myFile.print(temp3);
+    myFile.print(",");
+    myFile.print(moisture3);
+    myFile.print(",");
+    myFile.print(conductivity3);
+    myFile.print(",");
+    myFile.print(permittivity3);
     myFile.println(" ");
     
     // close the file:
@@ -1195,12 +1154,12 @@ time_t compileTime()
     return t + FUDGE;           // add fudge factor to allow for compile time
 }
 
-#if DAVIS 
-void droplet_read(){
-  if(analogRead(droplet_pin)<300) rain_level = 3;
-else if(analogRead(droplet_pin)<500) rain_level = 2;
-else rain_level = 1;
+String droplet_read(){
+  if(analogRead(droplet_pin)<300) rain_level = "High Rain";
+else if(analogRead(droplet_pin)<500) rain_level = "Medium Rain";
+else rain_level = "Little or No Rain";
 }
+#if DAVIS 
 void I2C_rain(){
 
    unsigned int tips = 0; //Used to measure the number of tips
@@ -1222,9 +1181,99 @@ void I2C_rain(){
   }
   else
   {
-      double inch = tips/100;
+      inch_tips = tips/100;
       tips = tips/Intensity_period;
       Serial.println(tips);  //Prints out tips to monitor
   }
 }
 #endif
+
+
+
+void checkHydraProbes()
+{
+ 
+  if (moistureSensor.getHPStatus())
+  {
+    Serial.println("---------------Sensor 1-----------------");
+    moistureSensor.parseResponse();
+
+
+    temp = moistureSensor.getTemp();
+    moisture = moistureSensor.getMoisture();
+    conductivity = moistureSensor.getConductivity();
+    permittivity = moistureSensor.getPermittivity();
+
+    Serial.print("Temp = ");
+    Serial.println(temp);
+    Serial.print("Moisture = ");
+    Serial.println(moisture);
+    Serial.print("Conductivity = ");
+    Serial.println(conductivity);
+    Serial.print("Permittivity = ");
+    Serial.println(permittivity);
+    Serial.println("");
+  }
+  else
+  {
+    Serial.println("Could not communicate with HydraProbe (1).");
+    Serial.println("Check Connection.");
+  }
+
+
+  if (moistureSensor2.getHPStatus())
+  {
+    Serial.println("---------------Sensor 2-----------------");
+    moistureSensor2.parseResponse();
+
+
+    temp2 = moistureSensor2.getTemp();
+    moisture2 = moistureSensor2.getMoisture();
+    conductivity2 = moistureSensor2.getConductivity();
+    permittivity2 = moistureSensor2.getPermittivity();
+
+    Serial.print("Temp 2 = ");
+    Serial.println(temp2);
+    Serial.print("Moisture 2 = ");
+    Serial.println(moisture2);
+    Serial.print("Conductivity 2 = ");
+    Serial.println(conductivity2);
+    Serial.print("Permittivity 2 = ");
+    Serial.println(permittivity2);
+    Serial.println("");
+  }
+  else
+  {
+    Serial.println("Could not communicate with HydraProbe (2).");
+    Serial.println("Check Connection.");
+  }
+
+
+
+  if (moistureSensor3.getHPStatus())
+  {
+
+    Serial.println("---------------Sensor 3-----------------");
+    moistureSensor3.parseResponse();
+
+
+    temp3 = moistureSensor3.getTemp();
+    moisture3 = moistureSensor3.getMoisture();
+    conductivity3 = moistureSensor3.getConductivity();
+    permittivity3 = moistureSensor3.getPermittivity();
+    Serial.print("Temp 3 = ");
+    Serial.println(temp3);
+    Serial.print("Moisture 3 = ");
+    Serial.println(moisture3);
+    Serial.print("Conductivity 3 = ");
+    Serial.println(conductivity3);
+    Serial.print("Permittivity 3 = ");
+    Serial.println(permittivity3);
+    Serial.println("");
+  }
+  else
+  {
+    Serial.println("Could not communicate with HydraProbe (3).");
+    Serial.println("Check Connection.");
+  }
+}
