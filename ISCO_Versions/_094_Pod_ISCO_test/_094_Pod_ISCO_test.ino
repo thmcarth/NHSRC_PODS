@@ -1,4 +1,4 @@
-#include <Parsivel.h>
+// #include <Parsivel.h>
 #include <HydraProbe.h>
 #include <Adafruit_INA260.h>
 #include <HTTPS_VIPER.h>
@@ -131,7 +131,7 @@ int Probetime = 60000;
 //
 
 ////Parsivel SDI
-Parsivel parsivel;
+//Parsivel parsivel;
 
 ////
 
@@ -239,8 +239,8 @@ void setup() {
   pinMode(BattRail_VIN, INPUT);
   digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
   delay(500);
-  parsivel.debugOn();
-  parsivel.begin(4);
+ // parsivel.debugOn();
+  //parsivel.begin(4);
   moistureSensor.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
   moistureSensor.begin(0);
   Watchdog.reset();
@@ -278,7 +278,7 @@ void setup() {
   //digitalWrite(SSERIAL_CTRL_PIN, RS485_RECEIVE);  // Put RS485 in receive mode
   //ParsivelSerial.begin(19200);
   Watchdog.reset();
-  setup_parsivel();
+  //setup_parsivel();
 }
 
 
@@ -347,7 +347,7 @@ else if (comm =='k'){
 }
 else if (comm == '0'){
   
-  Serial.println(parsivel.getAddress());
+//  Serial.println(parsivel.getAddress());
 }
 else if(comm == 13){
   //
@@ -1272,7 +1272,7 @@ void I2C_rain(){
 #endif
 
 void changeAddress(){
-  moistureSensor.changeAddress(2);
+  moistureSensor.changeAddress(3);
 }
 
 void checkHydraProbes()
