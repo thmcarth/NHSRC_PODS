@@ -262,6 +262,8 @@ void setup() {
   Watchdog.reset();
   //delay(5000);
   //massSMS("Testing WET Board mass Text (from Teensy)");
+  moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
+  moistureSensor3.begin(3);
 }
 
 void loop() {
@@ -291,7 +293,7 @@ void loop() {
   getBV(); //get voltage rail readings
  
 
-  if (currentTime - lastPost > /*minsToPost */ 60000) //Post data every (minsToPost) minutes
+  if (currentTime - lastPost > minsToPost * 60000) //Post data every (minsToPost) minutes
   { // at the moment we post every 1 minute   
     postData();
     lastPost = millis(); //reset timer
@@ -308,9 +310,9 @@ if(currentWaterMillis - previousMillis > rain_period) {
     // save the last time you blinked the LED 
     previousMillis = currentWaterMillis;  
     I2C_rain();
-  } 
+  }
 #endif 
-
+Watchdog.reset();
   if (currentTime - lastProbe >  Probetime){
    checkHydraProbes();
    lastProbe = millis();
@@ -692,10 +694,12 @@ void cleararray(char* a){
 
 void clearIscoSerial()
 {
+  Serial.println("Start Clearing ISCO");
   for (int x = 0; x < 64 ; ++x)
   {
     char a = iscoSerial.read();
   }
+  Serial.println("Done clearing ISCO");
 }
 
 
@@ -887,7 +891,7 @@ Serial.print(permittivity2);Serial.print(",");Serial.print(temp3);Serial.print("
 Serial.print(moisture3*100);Serial.print(",");Serial.print(conductivity3);Serial.print(",");Serial.println(permittivity3);
     xbeeSerial.print(http.getData());
    // xbeeSerial.println("P"http.getData());  //backup solution
-
+Serial.println("Done sending to VIPER");
 }
 
 void printDigits(int digits) {
