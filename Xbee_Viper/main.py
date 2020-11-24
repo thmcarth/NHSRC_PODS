@@ -180,8 +180,16 @@ def read_serial():
             serial = serial[1:]
             send_text(serial)
         elif types is 3:  # send to all users
+
             serial = serial[1:]
             send_text_all(serial)
+        elif types is 4:  # post to VIPER
+            t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
+            t = create_time(t)
+            comma = serial.find(",")
+            ident = serial[:comma]
+            serial = serial[comma+1:]
+            ssend(serial,ident,t)
     else:
         return 0
 
@@ -194,6 +202,8 @@ def check_serial_type(msg):
     if msg:
         first = msg[0:1]
         first = first.lower()
+        if first.isnumeric():
+            return 4
         switcher = {
             "p": 1,
             "c": 2,
