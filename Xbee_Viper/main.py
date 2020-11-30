@@ -304,7 +304,6 @@ def ssend(body, ident, time):
     print(" Sending \n")
     socketObject.send(post)
     print(socketObject.readline())
-
     print("Printing the remainder of the server's response: \n")
     # Use a "standard" receive call, "recv",
     # to receive a specified number of
