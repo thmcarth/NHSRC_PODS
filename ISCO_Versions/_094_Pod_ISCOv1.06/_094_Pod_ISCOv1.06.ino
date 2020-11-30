@@ -170,6 +170,13 @@ int date;  //holds current date so new file can be written at midnight
 unsigned long lastSave = millis();  // holds time since execution of last save to ensure data is saved every 60 seconds
 ///////////////SD
 
+//EEPROM timing
+timer_ident = 60; //mins
+bool first_eeprom = true;
+int ident_ADR = 4;
+int ident = 1;
+//
+
 //ISCO
 #include <Time.h>
 #define IscoSamplePin 16
@@ -249,6 +256,13 @@ void setup() {
     grabSampleInterval = 1;
   }
   */
+  bool first_up = 1;
+  if (first_up){
+    EEPROM.write(ident_ADR,ident);
+  }
+  else{
+    ident = EEPROM.read(ident_ADR);
+  }
 
   // if grabSample is in true this doesn't do anything
   Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println("minutes");
@@ -889,6 +903,8 @@ Serial.print(permittivity);Serial.print(",");Serial.print(temp2);Serial.print(",
 Serial.print(moisture2*100);Serial.print(",");Serial.print(conductivity2);Serial.print(",");
 Serial.print(permittivity2);Serial.print(",");Serial.print(temp3);Serial.print(",");
 Serial.print(moisture3*100);Serial.print(",");Serial.print(conductivity3);Serial.print(",");Serial.println(permittivity3);
+    xbeeSerial.print(ident);
+    xbeeSerial.print(,);
     xbeeSerial.print(http.getData());
    // xbeeSerial.println("P"http.getData());  //backup solution
 Serial.println("Done sending to VIPER");
