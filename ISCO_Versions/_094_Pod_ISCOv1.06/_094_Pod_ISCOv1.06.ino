@@ -278,6 +278,10 @@ void setup() {
   //delay(5000);
   //massSMS("Testing WET Board mass Text (from Teensy)");
   moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
+  moistureSensor3.begin(1);
+  moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
+  moistureSensor3.begin(2);
+  moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
   moistureSensor3.begin(3);
 }
 
