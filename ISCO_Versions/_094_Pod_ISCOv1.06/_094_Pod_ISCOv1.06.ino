@@ -256,6 +256,7 @@ void setup() {
     grabSampleInterval = 1;
   }
   */
+////////////////////////// FIRST TIME UPLOAD, GET THE IDENTITY FOR THIS WETBOARD SET AT 1 OR 0
   bool first_up = 1;
   if (first_up){
     EEPROM.write(ident_ADR,ident);
@@ -263,7 +264,7 @@ void setup() {
   else{
     ident = EEPROM.read(ident_ADR);
   }
-
+///////////////////////////////
   // if grabSample is in true this doesn't do anything
   Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println("minutes");
   xbeeSerial.begin(9600); //Startup SMS and Cell client
