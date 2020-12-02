@@ -168,9 +168,11 @@ File myFile;
 int minsToSave = 1;
 int date;  //holds current date so new file can be written at midnight
 unsigned long lastSave = millis();  // holds time since execution of last save to ensure data is saved every 60 seconds
+
 ///////////////SD
 
 //EEPROM timing
+unsigned long ident_save = millis();
 timer_ident = 60; //mins
 bool first_eeprom = true;
 int ident_ADR = 4;
@@ -404,6 +406,17 @@ Watchdog.reset();
 
   clearIscoSerial();
  cleararray(iscoData);
+
+
+
+ if (millis() - ident_save > timer_ident * 60000) //Save ident once per hour 
+  {
+    Serial.println("----------");
+    Serial.println("Saving Ident for Viper push");
+    Serial.println("----------");
+    ident_save = millis();
+    EEPROM.write(ident_ADR, ident).
+  }
  Serial.println("Here_end_loop");
 }
 
