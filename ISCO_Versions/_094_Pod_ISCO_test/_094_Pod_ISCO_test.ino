@@ -244,13 +244,15 @@ void setup() {
   moistureSensor.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
   moistureSensor.begin(0);
   Watchdog.reset();
-  if (!ina260.begin()) {
+  for (int i = 40; i< 56; i++){
+  if (!ina260.begin(i)) {
     Serial.println("Couldn't find INA260 chip");
   }
   else{
-  Serial.println("Found INA260 chip");
+  Serial.println("Found INA260 chip: " + i);
   }
-  
+  delay(500);
+  }
   #if FIRST  //change FIRST to 1 when uploading and running first time
   EEPROM.write(eepromfirst_upload, 0);
   is_first = 1;
