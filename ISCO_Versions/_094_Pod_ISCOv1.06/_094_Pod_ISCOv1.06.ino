@@ -173,7 +173,7 @@ unsigned long lastSave = millis();  // holds time since execution of last save t
 
 //EEPROM timing
 unsigned long ident_save = millis();
-timer_ident = 60; //mins
+int timer_ident = 60; //mins
 bool first_eeprom = true;
 int ident_ADR = 4;
 int ident = 1;
@@ -212,7 +212,7 @@ Adafruit_INA260 ina260 = Adafruit_INA260();
 
 void setup() {
   Serial.begin(9600);
-  int countdownMS = Watchdog.enable(300000); //300 seconds or 5 minutes watchdog timer
+  int countdownMS = Watchdog.enable(600000); //600 seconds or 10 minutes watchdog timer
   Serial.print("Enabled the watchdog with max countdown of ");
   Serial.print(countdownMS, DEC);
   Serial.println(" milliseconds!");
@@ -259,7 +259,7 @@ void setup() {
   }
   */
 ////////////////////////// FIRST TIME UPLOAD, GET THE IDENTITY FOR THIS WETBOARD SET AT 1 OR 0
-  bool first_up = 1;
+  int first_up = 0;
   if (first_up){
     EEPROM.write(ident_ADR,ident);
   }
@@ -285,8 +285,17 @@ void setup() {
   moistureSensor3.begin(2);
   moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
   moistureSensor3.begin(3);
-}
 
+
+   
+    
+  if (!ina260.begin()) {
+    Serial.println("Couldn't find INA260 chip");
+  }
+  else{
+  Serial.println("Found INA260 chip!");
+  }
+}
 void loop() {
   unsigned long currentTime = millis();
     Watchdog.reset();
@@ -317,6 +326,7 @@ void loop() {
   if (currentTime - lastPost > minsToPost * 60000) //Post data every (minsToPost) minutes
   { // at the moment we post every 1 minute   
     postData();
+    http.clearData();
     lastPost = millis(); //reset timer
     clearIscoSerial(); //clear isco and fona serials
     flushxbeeSerial();
@@ -332,7 +342,7 @@ if(currentWaterMillis - previousMillis > rain_period) {
     previousMillis = currentWaterMillis;  
     I2C_rain();
   }
-#endif 
+#endif
 Watchdog.reset();
   if (currentTime - lastProbe >  Probetime){
    checkHydraProbes();
@@ -380,7 +390,7 @@ Watchdog.reset();
       }
     } else
     {
-      //Serial.println("------------------Currently in grab Sample Mode--------------------");
+      Serial.println("------------------Currently in grab Sample Mode--------------------");
     }
   } else
   {
@@ -404,20 +414,21 @@ Watchdog.reset();
     char b = xbeeSerial.read();
   } */
 
-  clearIscoSerial();
- cleararray(iscoData);
+ //clearIscoSerial();
+ //cleararray(iscoData);
 
 
 
- if (millis() - ident_save > timer_ident * 60000) //Save ident once per hour 
+ if (millis() - ident_save > timer_ident * 2 *  60000) //Save ident once per 2 hours 
   {
     Serial.println("----------");
     Serial.println("Saving Ident for Viper push");
     Serial.println("----------");
     ident_save = millis();
-    EEPROM.write(ident_ADR, ident).
+    EEPROM.write(ident_ADR, ident);
   }
  Serial.println("Here_end_loop");
+ //Watchdog.reset();
 }
 
 void setup_parsivel() { // Tells the Parsivel through serial message how we want to get the telegram data from it
@@ -487,20 +498,20 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   return;
  }
  // may need to add \0 later
- if (msg == "C1"){
+ if (msg == "1"){
  
  String batt = getBV(); // call for battery
  return_msg = batt;
  sendSMS(return_msg);
  }
 
-else if (msg =="C2"){
+else if (msg =="2"){
   Sample();
   return_msg = "Sampling";
   sendSMS(return_msg);
  }
  
-else if (msg =="C3"){
+else if (msg =="3"){
  if (ISCORail)
       {
         ISCORail = false;  
@@ -514,7 +525,7 @@ else if (msg =="C3"){
       }
  }
  
-else if (msg =="C4"){
+else if (msg =="4"){
       if (grabSampleMode)
       {
         grabSampleMode = false;
@@ -531,7 +542,7 @@ else if (msg =="C4"){
       }
  }
  
-else if (msg.substring(0,3)=="C5_"){  //This command is the one to change the Sample interval of the ISCO
+else if (msg.substring(0,3)=="5_"){  //This command is the one to change the Sample interval of the ISCO
    int new_time = 0;
    new_time = msg.substring(4).toInt();
    grabSampleInterval = new_time;
@@ -540,30 +551,30 @@ else if (msg.substring(0,3)=="C5_"){  //This command is the one to change the Sa
    sendSMS(return_msg);
  }
 
-else if (msg =="C6"){  // 
+else if (msg =="6"){  // 
   minsToPost = .5;
   return_msg = "post time changed to 30 seconds";
   sendSMS(return_msg);
 }
 
-else if (msg == "C7"){
+else if (msg == "7"){
   minsToPost = 5;
   return_msg = "post time changed to 5 minutes";
   sendSMS(return_msg);
 }
 
-else if (msg.substring(0,3)=="C8_"){
-  rain_period = msg.substring(4).toInt();
+else if (msg.substring(0,2)=="8_"){
+  rain_period = msg.substring(3).toInt();
   return_msg = "new rainfall read time is: " + rain_period;
   sendSMS(return_msg);
 }
 
-else if (msg.substring(0,3)=="C9_"){
- RQTime = msg.substring(4).toInt();
+else if (msg.substring(0,2)=="9_"){
+ RQTime = msg.substring(3).toInt();
  return_msg = "new RQ read time is: " + RQTime;
  sendSMS(return_msg);
 }
-else if (msg.substring(0,3)=="C10_"){
+else if (msg.substring(0,3)=="10_"){
 
 }
 else{
@@ -729,7 +740,9 @@ void clearIscoSerial()
   Serial.println("Start Clearing ISCO");
   for (int x = 0; x < 64 ; ++x)
   {
+    if (iscoSerial.available())
     char a = iscoSerial.read();
+    
   }
   Serial.println("Done clearing ISCO");
 }
@@ -897,22 +910,22 @@ void postData() //post Data to VIPER
     }
     
     // format addX
-    http.addInt("Bottle Number", getBottleNumber(), "/24");
-    http.addFloat("Battery Voltage", getBV(), "V");
-    http.addInt("Level Reading", intWL, " 0/50");
-    http.addFloat("Davis Rain Intensity", inch_tips, "inches");
-    http.addFloat("HProbe1 Temp",temp, "°C");
-    http.addFloat("HProbe1 Moisture",moisture*100 ,"%"); 
-    http.addFloat("HProbe1 Conductivity",conductivity, "S/m");
-    http.addFloat("HProbe1 Permittivity",permittivity, "Dielectric Units");
-    http.addFloat("HProbe2 Temp",temp2, "°C");
-    http.addFloat("HProbe2 Moisture",moisture2*100,"%"); 
-    http.addFloat("HProbe2 Conductivity",conductivity2, "S/m");
-    http.addFloat("HProbe2 Permittivity",permittivity2, "Dielectric Units");
-    http.addFloat("HProbe3 Temp",temp3, "°C");
-    http.addFloat("HProbe3 Moisture",moisture3*100,"%"); 
-    http.addFloat("HProbe3 Conductivity",conductivity3, "S/m");
-    http.addFloat("HProbe3 Permittivity",permittivity3, "Dielectric Units");
+    http.addInt("BottleNumber", getBottleNumber(), "/24");
+    http.addFloat("BatteryVoltage", getBV(), "mV");
+    http.addInt("LevelReading", intWL, " 0/50");
+    http.addFloat("DavisRainIntensity", inch_tips, "inches");
+    http.addFloat("HProbe1Temp",temp, "°C");
+    http.addFloat("HProbe1Moisture",moisture*100 ,"%"); 
+    http.addFloat("HProbe1Conductivity",conductivity, "S/m");
+    http.addFloat("HProbe1Permittivity",permittivity, "Dielectric Units");
+    http.addFloat("HProbe2Temp",temp2, "°C");
+    http.addFloat("HProbe2Moisture",moisture2*100,"%"); 
+    http.addFloat("HProbe2Conductivity",conductivity2, "S/m");
+    http.addFloat("HProbe2Permittivity",permittivity2, "Dielectric Units");
+    http.addFloat("HProbe3Temp",temp3, "°C");
+    http.addFloat("HProbe3Moisture",moisture3*100,"%"); 
+    http.addFloat("HProbe3Conductivity",conductivity3, "S/m");
+    http.addFloat("HProbe3Permittivity",permittivity3, "Dielectric Units");
 Serial.print("data: " );Serial.print(getBottleNumber());Serial.print(",");
 Serial.print(getBV());Serial.print(",");Serial.print(intWL);Serial.print(",");
 Serial.print(inch_tips);Serial.print(",");Serial.print(temp);Serial.print(",");
@@ -921,9 +934,11 @@ Serial.print(permittivity);Serial.print(",");Serial.print(temp2);Serial.print(",
 Serial.print(moisture2*100);Serial.print(",");Serial.print(conductivity2);Serial.print(",");
 Serial.print(permittivity2);Serial.print(",");Serial.print(temp3);Serial.print(",");
 Serial.print(moisture3*100);Serial.print(",");Serial.print(conductivity3);Serial.print(",");Serial.println(permittivity3);
-    xbeeSerial.print(ident);
-    xbeeSerial.print(,);
-    xbeeSerial.print(http.getData());
+ident++;
+    String identS = String(ident);
+    xbeeSerial.print(identS + "," + http.getData());
+    Serial.println(http.getData());
+    http.clearData();
    // xbeeSerial.println("P"http.getData());  //backup solution
 Serial.println("Done sending to VIPER");
 }
@@ -1197,7 +1212,7 @@ String droplet_read(){
 else if(analogRead(droplet_pin)<500) rain_level = "Medium Rain";
 else rain_level = "Little or No Rain";
 }
-#if DAVIS 
+#if DAVIS
 void I2C_rain(){
 
    unsigned int tips = 0; //Used to measure the number of tips
