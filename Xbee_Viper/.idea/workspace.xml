@@ -57,29 +57,33 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state width="936" height="272" key="GridCell.Tab.0.bottom" timestamp="1605821651496">
+    <state x="740" y="262" key="FileChooserDialogImpl" timestamp="1607548332016">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="936" height="272" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1605821651496" />
-    <state width="936" height="272" key="GridCell.Tab.0.center" timestamp="1605821651496">
+    <state x="740" y="262" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1607548332016" />
+    <state width="1899" height="274" key="GridCell.Tab.0.bottom" timestamp="1607555560192">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="936" height="272" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1605821651496" />
-    <state width="936" height="272" key="GridCell.Tab.0.left" timestamp="1605821651496">
+    <state width="1899" height="274" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1607555560192" />
+    <state width="1899" height="274" key="GridCell.Tab.0.center" timestamp="1607555560192">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="936" height="272" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1605821651496" />
-    <state width="936" height="272" key="GridCell.Tab.0.right" timestamp="1605821651496">
+    <state width="1899" height="274" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1607555560192" />
+    <state width="1899" height="274" key="GridCell.Tab.0.left" timestamp="1607555560192">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="936" height="272" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1605821651496" />
-    <state x="1133" y="348" width="607" height="340" key="com.intellij.ide.util.TipDialog" timestamp="1606241356338">
+    <state width="1899" height="274" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1607555560192" />
+    <state width="1899" height="274" key="GridCell.Tab.0.right" timestamp="1607555560192">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="1133" y="348" width="607" height="340" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1606241356338" />
-    <state x="1053" y="100" width="774" height="840" maximized="true" key="dock-window-1" timestamp="1597941526908">
+    <state width="1899" height="274" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1607555560192" />
+    <state x="1133" y="348" width="607" height="340" key="com.intellij.ide.util.TipDialog" timestamp="1607554654406">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="1053" y="100" width="774" height="840" maximized="true" key="dock-window-1/0.0.1920.1040@0.0.1920.1040" timestamp="1597941526908" />
+    <state x="1133" y="348" width="607" height="340" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1607554654406" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1607472041729">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1607472041729" />
   </component>
 </project>

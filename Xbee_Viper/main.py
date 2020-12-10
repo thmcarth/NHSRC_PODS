@@ -9,13 +9,13 @@
 import socket
 # from machine import UART
 import time
-
+import utime
 # from machine import I2C
 
 import usocket
 import network
 import sys
-
+test = 1
 '''
 Commands we are going to send/receive to TEENSY
 
@@ -150,6 +150,9 @@ def create_time(array):
     year = array[0]
     month = array[1]
     day = array[2]
+    day = str(day)
+    if len(day) is 1:
+        day = "0" + day
     hour = array[3]
     minute = array[4]
     second = array[5]
@@ -163,9 +166,24 @@ def read_serial():
     global data
     global ident
     global t
-    serial = sys.stdin.read()
+    serial1 = sys.stdin.read()   # UART library doesn't work here!
+    utime.sleep_ms(5)
+    serial2 = sys.stdin.read()
+    serial = None
+    if (serial1):
+        serial = str(serial1) + str(serial2)
+        print(serial1)
+        utime.sleep_ms(10)
+        print(serial2)
+        print("Therefore serial is ")
+        print(serial)
     if serial:
         print(serial)
+        if test is not 0:
+            if c.isconnected():
+                # c.sms_send(2524126262, serial)
+                print("Sent message")
+
         types = check_serial_type(serial)
         if types is 0:
             return 0
@@ -188,21 +206,23 @@ def read_serial():
             t = create_time(t)
             comma = serial.find(",")
             ident = serial[:comma]
-            serial = serial[comma+1:]
+            serial = serial[comma+2:]
             ssend(serial,ident,t)
     else:
         return 0
 
 
 def send_serial(message):
-    sys.stdout.write(message)
+    sys.stdout.write(message)  # UART library doesn't work here!
 
 
 def check_serial_type(msg):
     if msg:
-        first = msg[0:1]
+        first  = msg[0:1]
+        print(first)
         first = first.lower()
-        if first.isnumeric():
+        id =  first.isdigit()
+        if id is True :
             return 4
         switcher = {
             "p": 1,
@@ -281,8 +301,12 @@ def ssend(body, ident, time):
            -------
            None
            """
+    if test:
+        if c.isconnected():
+            c.sms_send(2524126262, ident)
+            c.sms_send(2524126262, time)
     print("\n Starting Response \n")
-    print("Body is: ", body)
+    print("Body is:"+ str(body))
     post = bytes('<?xml version="1.0" encoding="utf-8"?>\n'
                  '<alert xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
                  'xmlns:xsd="http://www.w3.org/2001/XMLSchema"\n'
@@ -319,16 +343,16 @@ c = network.Cellular()
 
 def command_read(comm):
     switcher = {
-        1: "C1",
-        2: "C2",
-        3: "C3",
-        4: "C4",
-        5: "C5",
-        6: "C6",
-        7: "C7",
-        8: "C8",
-        9: "C9",
-        10: "C10"
+        1: "1",
+        2: "2",
+        3: "3",
+        4: "4",
+        5: "5",
+        6: "6",
+        7: "7",
+        8: "8",
+        9: "9",
+        10: "10"
     }
     print("Received: ", comm)
     return switcher.get(comm, "Invalid command")
@@ -393,8 +417,8 @@ def create_msg(msg):
        String: message C#
         """
     print("Message is ", msg)
-    msg1 = "C" + str(msg)
-    return msg1
+    #  msg1 = "C" + str(msg)
+    return msg
 
 
 def send_text(msg, sms):
@@ -410,7 +434,7 @@ def send_text(msg, sms):
         None
         """
     if c.isconnected():
-        c.sms_send(sms['sender'], msg)
+        c.sms_send(prev_sender, msg)
 
 def send_text_all(msg):
     """Sends a text message back to most recent user
@@ -514,4 +538,4 @@ while True:
     # if true: interface with Teensy and send Teensy C#
     # check timer for VIPER POST
 
-    time.sleep(5)
+    utime.sleep_ms(1000)
