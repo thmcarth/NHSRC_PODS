@@ -168,22 +168,33 @@ def create_time(array):
 
 def read_serial():
     global prev_sender
+    global prev_msg
     global data
     global ident
     global t
     serial1 = sys.stdin.read()  # UART library doesn't work here!
-    utime.sleep_ms(12)
+    utime.sleep_ms(20)
     serial2 = sys.stdin.read()
-    # serial3 = sys.stdin.read()
+    utime.sleep_ms(30)
+    serial3 = sys.stdin.read()
     serial = None
+    if (serial1 and serial2 and serial3):
+        serial = str(serial1) + str(serial2)+ str(serial3)
+        if not deployed:
+            print(serial1)
+        if not deployed:
+            print(serial2)
+            print(serial3)
+            print("Therefore serial(3) is ")
+            print(serial)
+
     if (serial1 and serial2):
         serial = str(serial1) + str(serial2)
         if not deployed:
             print(serial1)
-        utime.sleep_ms(10)
         if not deployed:
             print(serial2)
-            print("Therefore serial is ")
+            print("Therefore serial2 is ")
             print(serial)
     if serial1 and not serial2:
         serial = serial1
@@ -192,6 +203,7 @@ def read_serial():
 
     if serial:
         types = check_serial_type(serial)
+        #c.sms_send(2524126262, "types is " + str(types))
         if types is 0:
             return 0
         elif types is 1:  # post to viper
@@ -203,6 +215,7 @@ def read_serial():
 
         elif types is 2:  # send to users
             serial = serial[1:]
+            #c.sms_send(2524126262, "Got a C command")
             send_text(serial)
             # prev_sender = None
         elif types is 3:  # send to all users
@@ -216,12 +229,10 @@ def read_serial():
             ident = serial[:comma]
             serial = serial[comma + 2:]
             ssend(serial, ident, t)
-        elif types is 5:
-            if not deployed:
-                print("all is well")
-            # prev_sender = None
-        elif types is 6 and prev_sender is not None:
+        elif types is 6 and prev_msg is not None:
             print(prev_msg)
+            prev_msg = None
+            c.sms_send(2524126262, "? received")
     else:
         return 0
 
@@ -245,7 +256,7 @@ def check_serial_type(msg):
             "p": 1,
             "c": 2,
             "a": 3,
-            "k": 5,
+            "k":5,
             "?": 6
         }
         return switcher.get(first, 0)
@@ -326,7 +337,7 @@ def ssend(body, ident, time):
         if test:
             if c.isconnected():
                 c.sms_send(2524126262, ident)
-                c.sms_send(2524126262, time)
+                #c.sms_send(2524126262, time)
         if not deployed:
             print("\n Starting Response \n")
             print("Body is:" + str(body))
@@ -335,10 +346,10 @@ def ssend(body, ident, time):
                      'xmlns:xsd="http://www.w3.org/2001/XMLSchema"\n'
                      'xmlns="urn:oasis:names:tc:emergency:cap:1.1">\n'
                      '<identifier>' + str(ident) + '</identifier>\n'
-                                                   '<sender>EPA_WET_BOARD_8 12-17-2020</sender>\n'
+                                                   '<sender>EPA_WET_BOARD_2 12-17-2020</sender>\n'
                                                    '<sent>' + str(time) + '</sent>\n'
-                                                                          '<source>Board8,BoardTest8,'
-                                                                          '1,2</source>\n'
+                                                                          '<source>Board2,BoardTest2,'
+                                                                          '2,2</source>\n'
                                                                           '<info>\n'
                                                                           '<headline>' + str(body) + '</headline>\n'
                                                                                                      '<area>\n'
@@ -407,6 +418,7 @@ def command_read(comm):
     return data_i2c
 """
 
+
 def check_txt():
     """   Checks Text Message make sure sender is allowed and message is a valid command
 
@@ -469,10 +481,9 @@ def send_text(msg):
         None
         """
 
-    prev_msg = None
     if c.isconnected():
         c.sms_send(prev_sender, msg)
-    prev_sender = None
+    prev_msg = None
 
 
 def send_text_all(msg):
@@ -548,7 +559,7 @@ def check_number(number):
     return ok_num
 
 
-prev_msg = ""
+prev_msg = None
 
 while True:
     """Runs while loop functionality of xbee. 
@@ -560,7 +571,6 @@ while True:
            """
     # sms_sender = ''
 
-    serial_type = 0
     if c.isconnected():
         msg_sms = check_txt()  # check for text*
         # tuple_msg = check_txt()
@@ -572,16 +582,17 @@ while True:
         if sms:
             prev_sender = sms['sender']
         if msg is not None:
-            msg = create_msg(msg)
             send_serial(msg)  # if true: interface with Teensy and send Teensy C#
             # answer = None
             # counter = 40
             prev_msg = msg
+            """
             # while answer is None and counter > 0:
             # answer = sys.stdin.read()
             # print(msg, end=' ')
             # utime.sleep_ms(100)
             # counter = counter - 1
+            """
 
     read_serial()
 

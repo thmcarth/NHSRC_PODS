@@ -310,7 +310,7 @@ void loop() {
   {
     Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
     do {
-       checkTexts();
+       //checkTexts();
     } while (iscoSerial.available() == 0 && millis() - iscoTimeout < 40000); //If there is data on the serial line, OR its been 40 seconds, continue
     iscoTimeout = millis(); //reset timer
     Serial.print("Finished waiting for ISCO...Millis = "); Serial.println(millis());
@@ -481,8 +481,7 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   String return_msg;
  if (!rec)
  xbeeSerial.print("?");
-
- delay(50);
+ delay(10);
  if (xbeeSerial.available()>0)
  msg = xbeeSerial.readString();
  msg = msg.trim();
@@ -494,8 +493,6 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   return;
  }
  else {
-  xbeeSerial.print("k");
-  Serial.println("k");
   Serial.print("message is ");
   Serial.println(msg);
  }
@@ -510,13 +507,13 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  Serial.println("Found something!");
  }
 
-else if (msg[0] == 2){
+else if (msg[0] == '2'){
   Sample();
   return_msg = "Sampling";
   sendSMS(return_msg);
  }
  
-else if (msg[0] =="3"){
+else if (msg[0] =='3'){
  if (ISCORail)
       {
         ISCORail = false;  
@@ -530,7 +527,7 @@ else if (msg[0] =="3"){
       }
  }
  
-else if (msg[0] =="4"){
+else if (msg[0] =='4'){
       if (grabSampleMode)
       {
         grabSampleMode = false;
