@@ -9,13 +9,15 @@
 import socket
 # from machine import UART
 import time
-
+import utime
 # from machine import I2C
 
 import usocket
 import network
 import sys
 
+deployed = 1
+test = 1
 '''
 Commands we are going to send/receive to TEENSY
 
@@ -150,22 +152,45 @@ def create_time(array):
     year = array[0]
     month = array[1]
     day = array[2]
+    day = str(day)
+    if len(day) is 1:
+        day = "0" + day
     hour = array[3]
     minute = array[4]
     second = array[5]
     yearday = array[6]
-    total_time = "" + str(year) + "-" + str(month) + "-" + str(day) + "T" + str(hour) +":"+ str(minute)+":"+str(second)+"-05:00"
-    print("Total Time: ", total_time)
+    total_time = "" + str(year) + "-" + str(month) + "-" + str(day) + "T" + str(hour) + ":" + str(minute) + ":" + str(
+        second) + "-05:00"
+    if not deployed:
+        print("Total Time: ", total_time)
     return total_time
 
 
 def read_serial():
+    global prev_sender
     global data
     global ident
     global t
-    serial = sys.stdin.read()
+    serial1 = sys.stdin.read()  # UART library doesn't work here!
+    utime.sleep_ms(12)
+    serial2 = sys.stdin.read()
+    # serial3 = sys.stdin.read()
+    serial = None
+    if (serial1 and serial2):
+        serial = str(serial1) + str(serial2)
+        if not deployed:
+            print(serial1)
+        utime.sleep_ms(10)
+        if not deployed:
+            print(serial2)
+            print("Therefore serial is ")
+            print(serial)
+    if serial1 and not serial2:
+        serial = serial1
+        if not deployed:
+            print(serial)
+
     if serial:
-        print(serial)
         types = check_serial_type(serial)
         if types is 0:
             return 0
@@ -179,6 +204,7 @@ def read_serial():
         elif types is 2:  # send to users
             serial = serial[1:]
             send_text(serial)
+            # prev_sender = None
         elif types is 3:  # send to all users
 
             serial = serial[1:]
@@ -188,26 +214,39 @@ def read_serial():
             t = create_time(t)
             comma = serial.find(",")
             ident = serial[:comma]
-            serial = serial[comma+1:]
-            ssend(serial,ident,t)
+            serial = serial[comma + 2:]
+            ssend(serial, ident, t)
+        elif types is 5:
+            if not deployed:
+                print("all is well")
+            # prev_sender = None
+        elif types is 6 and prev_sender is not None:
+            print(prev_msg)
     else:
         return 0
 
 
 def send_serial(message):
-    sys.stdout.write(message)
+    if not deployed:
+        print("sending a message over serial")
+    print(message)  # UART library doesn't work here!
 
 
 def check_serial_type(msg):
     if msg:
         first = msg[0:1]
+        if not deployed:
+            print(first)
         first = first.lower()
-        if first.isnumeric():
+        id = first.isdigit()
+        if id is True:
             return 4
         switcher = {
             "p": 1,
             "c": 2,
-            "a": 3
+            "a": 3,
+            "k": 5,
+            "?": 6
         }
         return switcher.get(first, 0)
 
@@ -262,10 +301,12 @@ def http_post(host, body):
                          "Y29sbGllci5qYW1lc0BlcGEuZ292OldldGJvYXJkdGVhbTEh\r\nContent-Length: %i\r\nConnection: "
                          "Keep-Alive\r\n\r\n, utf8" % length)
         post = bytes(posthead + body)
-        print("Requesting from host")
+        if not deployed:
+            print("Requesting from host")
         s.send(post)
         while True:
-            print(str(s.recv(500), 'utf8'), end='')
+            if not deployed:
+                print(str(s.recv(500), 'utf8'), end='')
     finally:
         s.close()
 
@@ -281,37 +322,49 @@ def ssend(body, ident, time):
            -------
            None
            """
-    print("\n Starting Response \n")
-    print("Body is: ", body)
-    post = bytes('<?xml version="1.0" encoding="utf-8"?>\n'
-                 '<alert xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
-                 'xmlns:xsd="http://www.w3.org/2001/XMLSchema"\n'
-                 'xmlns="urn:oasis:names:tc:emergency:cap:1.1">\n'
-                 '<identifier>' + str(ident) + '</identifier>\n'
-                 '<sender>EPA_WET_BOARD_test 10-28-2020</sender>\n'
-                 '<sent>' + str(time) + '</sent>\n'
-                 '<source>Board 0,BoardTest1,'
-                 '1,2</source>\n'
-                 '<info>\n'
-                 '<headline>' + str(body) + '</headline>\n'
-                 '<area>\n'
-                 '<circle>38.904722, -77.016389 0</circle>\n'
-                 '</area>\n'
-                 '</info>\n'
-                 '</alert>\n', 'utf-8')
-    socketObject = usocket.socket(usocket.AF_INET, usocket.SOCK_STREAM)
-    socketObject.connect(("remote.ertviper.org", 8038))
-    print(" Sending \n")
-    socketObject.send(post)
-    print(socketObject.readline())
-
-    print("Printing the remainder of the server's response: \n")
-    # Use a "standard" receive call, "recv",
-    # to receive a specified number of
-    # bytes from the server, or as many bytes as are available.
-    # Receive and output the remainder of the page data.
-    socketObject.close()
-    print("Socket closed.")
+    if c.isconnected():
+        if test:
+            if c.isconnected():
+                c.sms_send(2524126262, ident)
+                c.sms_send(2524126262, time)
+        if not deployed:
+            print("\n Starting Response \n")
+            print("Body is:" + str(body))
+        post = bytes('<?xml version="1.0" encoding="utf-8"?>\n'
+                     '<alert xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
+                     'xmlns:xsd="http://www.w3.org/2001/XMLSchema"\n'
+                     'xmlns="urn:oasis:names:tc:emergency:cap:1.1">\n'
+                     '<identifier>' + str(ident) + '</identifier>\n'
+                                                   '<sender>EPA_WET_BOARD_8 12-17-2020</sender>\n'
+                                                   '<sent>' + str(time) + '</sent>\n'
+                                                                          '<source>Board8,BoardTest8,'
+                                                                          '1,2</source>\n'
+                                                                          '<info>\n'
+                                                                          '<headline>' + str(body) + '</headline>\n'
+                                                                                                     '<area>\n'
+                                                                                                     '<circle>38.904722, -77.016389 0</circle>\n'
+                                                                                                     '</area>\n'
+                                                                                                     '</info>\n'
+                                                                                                     '</alert>\n',
+                     'utf-8')
+        socketObject = usocket.socket(usocket.AF_INET, usocket.SOCK_STREAM)
+        socketObject.connect(("remote.ertviper.org", 8038))
+        if not deployed:
+            print(" Sending \n")
+        socketObject.send(post)
+        if not deployed:
+            print(socketObject.readline())
+            print("Printing the remainder of the server's response: \n")
+        # Use a "standard" receive call, "recv",
+        # to receive a specified number of
+        # bytes from the server, or as many bytes as are available.
+        # Receive and output the remainder of the page data.
+        socketObject.close()
+        if not deployed:
+            print("Socket closed.")
+    else:
+        if not deployed:
+            print("No connection")
 
 
 # i2c = I2C(1, freq=400000)  # I2c Module
@@ -320,18 +373,19 @@ c = network.Cellular()
 
 def command_read(comm):
     switcher = {
-        1: "C1",
-        2: "C2",
-        3: "C3",
-        4: "C4",
-        5: "C5",
-        6: "C6",
-        7: "C7",
-        8: "C8",
-        9: "C9",
-        10: "C10"
+        1: "1",
+        2: "2",
+        3: "3",
+        4: "4",
+        5: "5",
+        6: "6",
+        7: "7",
+        8: "8",
+        9: "9",
+        10: "10"
     }
-    print("Received: ", comm)
+    if not deployed:
+        print("Received: ", comm)
     return switcher.get(comm, "Invalid command")
 
 
@@ -369,14 +423,15 @@ def check_txt():
     if c.isconnected():
         sms_txt = c.sms_receive()
         if sms_txt:
-            print("Sender is: ", sms_txt['sender'])
+            if not deployed:
+                print("Sender is: ", sms_txt['sender'])
             sender = sms_txt['sender']
             valid = check_number(sender)
         if sms_txt and valid:
-            if command_read(sms_txt['message']) is "Invalid command":
-                return ["", sms_txt]
-            else:
-                return [sms_txt['message'], sms_txt]
+            # if command_read(sms_txt['message']) is "Invalid command":
+            # return ["", sms_txt]
+            # else:
+            return [sms_txt['message'], sms_txt]
         else:
             return ["", sms_txt]
 
@@ -393,12 +448,15 @@ def create_msg(msg):
         -------
        String: message C#
         """
-    print("Message is ", msg)
-    msg1 = "C" + str(msg)
-    return msg1
+    if not deployed:
+        print("Message is ", msg)
+    #  msg1 = "C" + str(msg)
+    return msg
 
 
-def send_text(msg, sms):
+def send_text(msg):
+    global prev_msg
+    global prev_sender
     """Sends a text message back to most recent user
 
         Parameters
@@ -410,8 +468,12 @@ def send_text(msg, sms):
         -------
         None
         """
+
+    prev_msg = None
     if c.isconnected():
-        c.sms_send(sms['sender'], msg)
+        c.sms_send(prev_sender, msg)
+    prev_sender = None
+
 
 def send_text_all(msg):
     """Sends a text message back to most recent user
@@ -481,9 +543,12 @@ def check_number(number):
     ok_num = 0
     if number in allowed:
         ok_num = 1
-    print("Number valid: ", number, " is ", ok_num)
+    if not deployed:
+        print("Number valid: ", number, " is ", ok_num)
     return ok_num
 
+
+prev_msg = ""
 
 while True:
     """Runs while loop functionality of xbee. 
@@ -498,7 +563,7 @@ while True:
     serial_type = 0
     if c.isconnected():
         msg_sms = check_txt()  # check for text*
-    # tuple_msg = check_txt()
+        # tuple_msg = check_txt()
         if len(msg_sms[0]) > 0:
             msg = msg_sms[0]
         else:
@@ -509,10 +574,18 @@ while True:
         if msg is not None:
             msg = create_msg(msg)
             send_serial(msg)  # if true: interface with Teensy and send Teensy C#
+            # answer = None
+            # counter = 40
+            prev_msg = msg
+            # while answer is None and counter > 0:
+            # answer = sys.stdin.read()
+            # print(msg, end=' ')
+            # utime.sleep_ms(100)
+            # counter = counter - 1
 
     read_serial()
 
     # if true: interface with Teensy and send Teensy C#
     # check timer for VIPER POST
 
-    time.sleep(5)
+    utime.sleep_ms(1000)
