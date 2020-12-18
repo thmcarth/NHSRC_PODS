@@ -335,8 +335,8 @@ def command_read(comm):
     return switcher.get(comm, "Invalid command")
 
 
-def i2c_read():
-    """placeholder
+"""def i2c_read():
+    placeholder
 
            Parameters
            ----------
@@ -346,12 +346,12 @@ def i2c_read():
            Returns
            -------
            None
-           """
+           
     global i2c
     data_i2c = i2c.readfrom(40, 4)
     data_i2c = int.from_bytes(data_i2c, byteorder='big')
     return data_i2c
-
+"""
 
 def check_txt():
     """   Checks Text Message make sure sender is allowed and message is a valid command
