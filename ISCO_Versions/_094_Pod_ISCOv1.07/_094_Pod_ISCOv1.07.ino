@@ -1,4 +1,4 @@
-#include <Adafruit_INA260.h>
+ #include <Adafruit_INA260.h>
 #include <HTTPS_VIPER.h>
 //#include <Adafruit_FONA.h>
 #include <HydraProbe.h>
@@ -210,6 +210,10 @@ unsigned long RQTime = 60000*5;
 //////////////////////////RELAYS
 Adafruit_INA260 ina260 = Adafruit_INA260();
 
+// SMS flags
+bool rec = false;
+
+
 void setup() {
   Serial.begin(9600);
   //int countdownMS = Watchdog.enable(600000); //600 seconds or 10 minutes watchdog timer
@@ -260,6 +264,7 @@ void setup() {
   */
 ////////////////////////// FIRST TIME UPLOAD, GET THE IDENTITY FOR THIS WETBOARD SET AT 1 OR 0
   int first_up = 0;
+
   if (first_up){
     EEPROM.write(ident_ADR,ident);
   }
@@ -273,7 +278,7 @@ void setup() {
   
   pinMode(IscoSamplePin, OUTPUT);  // Setup sample pin output
   digitalWrite(IscoSamplePin, LOW);
-  Serial.begin(9600);
+  Serial.begin(115200);
   iscoSerial.begin(9600); //Setup comms with ISCO
   //parsivelSerial.begin(19200);
   //Watchdog.reset();
@@ -297,14 +302,15 @@ void setup() {
   }
 }
 void loop() {
+  rec = false;
   unsigned long currentTime = millis();
     //Watchdog.reset();
-    
+    checkTexts(); //check for SMS commands
   if (ISCORail) // this is true at start
   {
     Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
     do {
-      //Watchdog.reset();
+       checkTexts();
     } while (iscoSerial.available() == 0 && millis() - iscoTimeout < 40000); //If there is data on the serial line, OR its been 40 seconds, continue
     iscoTimeout = millis(); //reset timer
     Serial.print("Finished waiting for ISCO...Millis = "); Serial.println(millis());
@@ -313,6 +319,7 @@ void loop() {
     } while (iscoSerial.available() > 0);
   } else
   {
+    checkTexts();
     delay(5000); //If ISCORail is disabled , wait 5 seconds every loop
   }
   Serial.println("Checking texts...");
@@ -329,7 +336,6 @@ void loop() {
     http.clearData();
     lastPost = millis(); //reset timer
     clearIscoSerial(); //clear isco and fona serials
-    flushxbeeSerial();
   } else
   {
     Serial.print(((minsToPost * 60000) - (currentTime - lastPost)) / 1000); Serial.println(" Seconds left b4 Post");
@@ -400,7 +406,7 @@ if(currentWaterMillis - previousMillis > rain_period) {
   iscoData[cdIndex] = '\0'; //null out data
   cdIndex = 0;
 
-
+ checkTexts();
 
  if (millis() - ident_save > timer_ident * 2 *  60000) //Save ident once per 2 hours 
   {
@@ -410,7 +416,9 @@ if(currentWaterMillis - previousMillis > rain_period) {
     ident_save = millis();
     EEPROM.write(ident_ADR, ident);
   }
+  checkTexts();
  Serial.println("Here_end_loop");
+  
  ////Watchdog.reset();
 }
 
@@ -464,37 +472,51 @@ for ( i = 0; i < len; i++)
  return intensity;
 }
 
+
+
 void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
 {
   int ind = 0;
   String msg;
   String return_msg;
- while (xbeeSerial.available()){
- msg[ind]=xbeeSerial.read();
- ind++;
- }
- msg.trim();
- Serial.print("msg is: " + msg + " length is ");
- Serial.println(msg.length());
+ if (!rec)
+ xbeeSerial.print("?");
+
+ delay(50);
+ if (xbeeSerial.available()>0)
+ msg = xbeeSerial.readString();
+ msg = msg.trim();
+ ind = msg.length();
+ //Serial.print("msg is: " + msg + " length is ");
+ //Serial.println(msg.length());
  if (msg.length() == 0){
-  Serial.println("No valid messages");
+  //Serial.println("No valid messages");
   return;
  }
+ else {
+  xbeeSerial.print("k");
+  Serial.println("k");
+  Serial.print("message is ");
+  Serial.println(msg);
+ }
  // may need to add \0 later
- if (msg == "1"){
+ if (msg[0] == '1'){
  
- String batt = getBV(); // call for battery
- return_msg = batt;
+ float batt = getBV(); // call for battery
+ String battString = String(batt);
+ return_msg = battString + " mV";
  sendSMS(return_msg);
+ rec = true;
+ Serial.println("Found something!");
  }
 
-else if (msg =="2"){
+else if (msg[0] == 2){
   Sample();
   return_msg = "Sampling";
   sendSMS(return_msg);
  }
  
-else if (msg =="3"){
+else if (msg[0] =="3"){
  if (ISCORail)
       {
         ISCORail = false;  
@@ -508,7 +530,7 @@ else if (msg =="3"){
       }
  }
  
-else if (msg =="4"){
+else if (msg[0] =="4"){
       if (grabSampleMode)
       {
         grabSampleMode = false;
@@ -534,13 +556,13 @@ else if (msg.substring(0,3)=="5_"){  //This command is the one to change the Sam
    sendSMS(return_msg);
  }
 
-else if (msg =="6"){  // 
+else if (msg[0] =="6"){  // 
   minsToPost = .5;
   return_msg = "post time changed to 30 seconds";
   sendSMS(return_msg);
 }
 
-else if (msg == "7"){
+else if (msg[0] == "7"){
   minsToPost = 5;
   return_msg = "post time changed to 5 minutes";
   sendSMS(return_msg);
@@ -576,7 +598,10 @@ else{
 
 void sendSMS(String message) {
   // send an SMS!
-  xbeeSerial.print("C"+ message);
+  Serial.print("Sending: ");
+  Serial.println("C"+message);
+  xbeeSerial.print("C"+message);
+  delay(10);
 }
 
 void massSMS(String message) {
@@ -815,19 +840,6 @@ unsigned long getSampledTime() //get time time the last bottle was sampled
 
   }
   return 0;
-}
-
-
-String getBVs()
-{
-  /*
-   * int INA = B100;00000; //connect
-     uint8_t INA_I = 0x01;
-     uint8_t INA_V = 0x02;
-   */
-String c = "0";
-  return c;
-  
 }
 
 float getBV()
