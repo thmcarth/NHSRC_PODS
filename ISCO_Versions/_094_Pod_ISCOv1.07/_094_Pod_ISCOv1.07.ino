@@ -218,12 +218,12 @@ void setup() {
   Serial.begin(9600);
   //int countdownMS = Watchdog.enable(600000); //600 seconds or 10 minutes watchdog timer
   //Serial.print("Enabled the watchdog with max countdown of ");
-//  Serial.print(countdownMS, DEC);
+  //Serial.print(countdownMS, DEC);
   //Serial.println(" milliseconds!");
   //Serial.println();
-// SETUP DST
-    setTime(myTZ.toUTC(compileTime()));
-//
+  // SETUP DST
+    setTime(myTZ.toUTC(compileTime()));  
+
   delay(2000);
   setSyncProvider(getTeensy3Time);
   Serial.print("Initializing SD card...");  //startup SD card
@@ -262,21 +262,42 @@ void setup() {
     grabSampleInterval = 1;
   }
   */
+
+
+
+  
 ////////////////////////// FIRST TIME UPLOAD, GET THE IDENTITY FOR THIS WETBOARD SET AT 1 OR 0
   int first_up = 0;
 
   if (first_up){
-    EEPROM.write(ident_ADR,ident);
+    EEPROM.write(ident_ADR,ident); // This sets the identity number we will be sending over to the Xbee to prevent the VIPER database from overlapping old data.  This updates every 2 hours onto EEPROM atm
   }
   else{
-    ident = EEPROM.read(ident_ADR);
+    ident = EEPROM.read(ident_ADR); // This reads the identity number we will be sending over to the Xbee to prevent the VIPER database from overlapping old data.  This updates every 2 hours onto EEPROM atm
   }
-///////////////////////////////
+
+
+
+
   // if grabSample is in true this doesn't do anything
-  Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println("minutes");
-  xbeeSerial.begin(9600); //Startup SMS and Cell client
+
   
-  pinMode(IscoSamplePin, OUTPUT);  // Setup sample pin output
+  Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println("minutes");
+
+  
+  xbeeSerial.begin(9600); 
+  //Startup SMS and Cell client DO NOT CHANGE THIS BAUD RATE UNLESS YOU CHANGE XBEE BAUD RATE WITH XCTU
+  //  Future design notes for Wiley and team: 
+  //  If you can setup serial1 for the alternative UART that Xbee uses with its UART class, we may have more fine control functionality
+  //  At the moment, we can only use the Xbee as so: 
+  // 1. Change baud rate to speed up slow down serial comms
+  // 2. read in data
+  // 3. write out data
+  // We want to be able to do more functions on data later if this ever gets a 2.0
+
+
+  
+  pinMode(IscoSamplePin, OUTPUT);  // Setup sample pin output to make ISCO sample when function is called to flip this pin
   digitalWrite(IscoSamplePin, LOW);
   Serial.begin(115200);
   iscoSerial.begin(9600); //Setup comms with ISCO
@@ -284,28 +305,34 @@ void setup() {
   //Watchdog.reset();
   //delay(5000);
   //massSMS("Testing WET Board mass Text (from Teensy)");
+  moistureSensor.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
+  moistureSensor.begin(1);  //Red tape
+  moistureSensor2.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
+  moistureSensor2.begin(2);  //yellow tape
   moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
-  moistureSensor3.begin(1);
-  moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
-  moistureSensor3.begin(2);
-  moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
-  moistureSensor3.begin(3);
+  moistureSensor3.begin(3);  // green tape
 
 
    
     
-  if (!ina260.begin()) {
-    Serial.println("Couldn't find INA260 chip");
+  if (!ina260.begin()) {  // Check to see if  I2c on XBEE is on if there is no comms.  This messed up the INA.
+    Serial.println("Couldn't find INA260 chip");  
   }
   else{
-  Serial.println("Found INA260 chip!");
+  Serial.println("Found INA260 chip!"); 
   }
 }
 void loop() {
+  
   rec = false;
+  
   unsigned long currentTime = millis();
+
+  
     //Watchdog.reset();
     checkTexts(); //check for SMS commands
+
+    
   if (ISCORail) // this is true at start
   {
     Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
@@ -330,6 +357,7 @@ void loop() {
   getBV(); //get voltage rail readings
  
 
+
   if (currentTime - lastPost > minsToPost * 60000) //Post data every (minsToPost) minutes
   { // at the moment we post every 1 minute   
     postData();
@@ -340,6 +368,8 @@ void loop() {
   {
     Serial.print(((minsToPost * 60000) - (currentTime - lastPost)) / 1000); Serial.println(" Seconds left b4 Post");
   }
+
+
 #if DAVIS
 //>>>>>>> 6b4848fa0c3169bf08481d0b8e37c27756e02b87
 unsigned long currentWaterMillis = millis();
@@ -349,17 +379,14 @@ if(currentWaterMillis - previousMillis > rain_period) {
     I2C_rain();
   }
 #endif
+
+
 //Watchdog.reset();
   if (currentTime - lastProbe >  Probetime){
    checkHydraProbes();
    lastProbe = millis();
   }
-//#if RQ
-//  if (currentTime - lastRQ > RQTime){
-//    //getRQ30();
-//    lastRQ = millis();
-//  }
-//#endif
+
 
   if (millis() - lastSave > minsToSave * 60000) //Save data every (minsToSave) minutes (1 mins)
   {
@@ -369,6 +396,9 @@ if(currentWaterMillis - previousMillis > rain_period) {
     if (SDcard) saveData();
     lastSave = millis();
   }
+
+
+  
   if (grabSampleMode) //Display sample mode on Serial Monitor 
   {
     Serial.println("------------------Currently in GRAB Sample Mode--------------------");
@@ -376,6 +406,9 @@ if(currentWaterMillis - previousMillis > rain_period) {
   {
     Serial.println("------------------Currently in AUTO Sample Mode--------------------");
   }
+
+
+  
   Serial.println("Here PRe Water level");
   if (getWaterLevel()) //If there is water in the pan......
   {
@@ -409,6 +442,7 @@ if(currentWaterMillis - previousMillis > rain_period) {
  checkTexts();
 
  if (millis() - ident_save > timer_ident * 2 *  60000) //Save ident once per 2 hours 
+ //EEPROM
   {
     Serial.println("----------");
     Serial.println("Saving Ident for Viper push");
@@ -422,31 +456,6 @@ if(currentWaterMillis - previousMillis > rain_period) {
  ////Watchdog.reset();
 }
 
-void setup_parsivel() { // Tells the Parsivel through serial message how we want to get the telegram data from it
-  //refer to OneDrive in Parsivel2-->Terminal Commands Pdf.
-  String interval = "60"; // This is how often we want to receive data from the parsivel
-  
-  String request_data = "CS/M/S/%19,/%01,/%02,/%60,/%34,/%18,/%93/r/n";// this asks for date/time, intensity, rain accumulated, particles detected, 
-  // kinetic energy, and raw data (in this order)
-  String interval_send = "CS/I/"+interval;
-  String enable_msg = "CS/M/M/1";
-  parsivelSerial.print(request_data);
-  delay(1000);
-  parsivelSerial.print(interval_send);
-  delay(1000);
-  parsivelSerial.print(enable_msg);
-  delay(500);
-}
-
-void read_parsivel(){
-  String message = "";
-  int i = 0;
-  while (parsivelSerial.available()){
-   message = ""+ message + parsivelSerial.read()+ "";
-  }
-  parsivel_data = message;
-  parsivel_intensity = parse_Intensity(message);
-}
 
 char* parse_Intensity(String message){
 
@@ -480,8 +489,12 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   String msg;
   String return_msg;
  if (!rec)
- xbeeSerial.print("?");
- delay(10);
+ {
+   xbeeSerial.print("?"); //Sends a ? to the XBEE, prompting the Xbee to send over the Text data.
+ }
+
+
+ delay(10);  //Wait for Text data
  if (xbeeSerial.available()>0)
  msg = xbeeSerial.readString();
  msg = msg.trim();
@@ -508,9 +521,11 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  }
 
 else if (msg[0] == '2'){
-  Sample();
+  toggleSample();
   return_msg = "Sampling";
+  delay(1000);
   sendSMS(return_msg);
+  rec = true;
  }
  
 else if (msg[0] =='3'){
@@ -525,6 +540,7 @@ else if (msg[0] =='3'){
         return_msg = "turned on ISCO";
         sendSMS(return_msg);
       }
+      rec = true;
  }
  
 else if (msg[0] =='4'){
@@ -542,6 +558,7 @@ else if (msg[0] =='4'){
         return_msg = "grab sample now on";
         sendSMS(return_msg);
       }
+      rec = true;
  }
  
 else if (msg.substring(0,3)=="5_"){  //This command is the one to change the Sample interval of the ISCO
@@ -551,33 +568,35 @@ else if (msg.substring(0,3)=="5_"){  //This command is the one to change the Sam
    EEPROM.put(eepromIntervalAddr, grabSampleInterval);
    return_msg = "new sampling time is: " + new_time; 
    sendSMS(return_msg);
+   rec = true;
  }
 
 else if (msg[0] =="6"){  // 
   minsToPost = .5;
   return_msg = "post time changed to 30 seconds";
   sendSMS(return_msg);
+  rec = true;
 }
 
 else if (msg[0] == "7"){
   minsToPost = 5;
   return_msg = "post time changed to 5 minutes";
   sendSMS(return_msg);
+  rec = true;
 }
 
 else if (msg.substring(0,2)=="8_"){
-  rain_period = msg.substring(3).toInt();
-  return_msg = "new rainfall read time is: " + rain_period;
-  sendSMS(return_msg);
+rec = true;
+  sendSMS("No Parsivel Connected");
 }
 
 else if (msg.substring(0,2)=="9_"){
- RQTime = msg.substring(3).toInt();
- return_msg = "new RQ read time is: " + RQTime;
- sendSMS(return_msg);
+  rec = true;
+ sendSMS("No RQ30 Connected");
 }
 else if (msg.substring(0,3)=="10_"){
-
+  rec = true;
+ sendSMS("No Sensor Connected");
 }
 else{
   Serial.println("No valid messages");
@@ -975,7 +994,7 @@ void saveData() {
 
   sprintf(levelChar, "%i", levelReading);
 
-  myFile = SD.open(fileName, FILE_WRITE);
+  myFile = SD.open(fileName, FILE_WRITE); //SD CARD CLASS LOOK UP FOR FEATURES
   // open the file for write at end like the Native SD library
   if (!myFile) {
     Serial.println("opening sd file for write failed");
@@ -1234,14 +1253,12 @@ void I2C_rain(){
 
 
 void checkHydraProbes()
+//Checks all Hydraprobes and grabs 4 data points (temperature, Moisture,conductivity and permittivity
 {
- 
   if (moistureSensor.getHPStatus())
   {
     Serial.println("---------------Sensor 1-----------------");
     moistureSensor.parseResponse();
-
-
     temp = moistureSensor.getTemp();
     moisture = moistureSensor.getMoisture();
     conductivity = moistureSensor.getConductivity();
