@@ -17,7 +17,7 @@ import network
 import sys
 
 deployed = 1
-test = 1
+test = 0
 '''
 Commands we are going to send/receive to TEENSY
 
@@ -167,31 +167,37 @@ def create_time(array):
 
 
 def read_serial():
+    """
+    No params
+
+    Reads in 3 sets of serial data and combines them to ensure all data is received.  Because Serial BUS is slow
+    Take all serial data and look at the first character to run through check serial type function
+    Decides what to do with serial data: text, mass text, or post to viper
+    """
     global prev_sender
     global prev_msg
     global data
     global ident
     global t
+
+    utime.sleep_ms(100) # DO not touch unless you are testing
     serial1 = sys.stdin.read()  # UART library doesn't work here!
-    utime.sleep_ms(20)
+    utime.sleep_ms(100) #
     serial2 = sys.stdin.read()
-    utime.sleep_ms(30)
+    utime.sleep_ms(100)
     serial3 = sys.stdin.read()
     serial = None
-    if (serial1 and serial2 and serial3):
+    if serial1 and serial2 and serial3:
         serial = str(serial1) + str(serial2)+ str(serial3)
         if not deployed:
             print(serial1)
-        if not deployed:
             print(serial2)
             print(serial3)
             print("Therefore serial(3) is ")
             print(serial)
 
-    if (serial1 and serial2):
+    if serial1 and serial2:
         serial = str(serial1) + str(serial2)
-        if not deployed:
-            print(serial1)
         if not deployed:
             print(serial2)
             print("Therefore serial2 is ")
@@ -206,7 +212,7 @@ def read_serial():
         #c.sms_send(2524126262, "types is " + str(types))
         if types is 0:
             return 0
-        elif types is 1:  # post to viper
+        elif types is 1:  # post to viper DEPRECATED.  Checks for IDent now in teensy string instead of using Xbee to update Idenmt
             serial = serial[1:]
             t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
             t = create_time(t)
@@ -222,7 +228,7 @@ def read_serial():
 
             serial = serial[1:]
             send_text_all(serial)
-        elif types is 4:  # post to VIPER
+        elif types is 4:  # post to VIPER!!!! accounts for EEPROM Identifier
             t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
             t = create_time(t)
             comma = serial.find(",")
@@ -256,7 +262,7 @@ def check_serial_type(msg):
             "p": 1,
             "c": 2,
             "a": 3,
-            "k":5,
+            "k":5,  # deprecate not used anymore
             "?": 6
         }
         return switcher.get(first, 0)
@@ -353,7 +359,7 @@ def ssend(body, ident, time):
                                                                           '<info>\n'
                                                                           '<headline>' + str(body) + '</headline>\n'
                                                                                                      '<area>\n'
-                                                                                                     '<circle>38.904722, -77.016389 0</circle>\n'
+                                                                                                     '<circle>38.904722, -77.016389 0</circle>\n' # !!!!!!!!! Change coords for each deployment 
                                                                                                      '</area>\n'
                                                                                                      '</info>\n'
                                                                                                      '</alert>\n',
