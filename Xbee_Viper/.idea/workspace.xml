@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9807b173-736a-4191-b25e-3a09cccafa01" name="Default Changelist" comment="" />
+    <list default="true" id="9807b173-736a-4191-b25e-3a09cccafa01" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/Adafruit_SleepyDog-master.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/Error messages.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/FONA3G/.vs/FONA3G/v16/.suo" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/FONA3G/.vs/FONA3G/v16/Browse.VC.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/FONA3G/.vs/FONA3G/v16/ipch/AutoPCH/f479dfeb651205ac/FONA3G.ipch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/FONA3G/.vs/ProjectSettings.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/FONA3G/.vs/VSWorkspaceState.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/FONA3G/.vs/slnx.sqlite" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/FONA3G/FONA3G.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/FONA3G/FONA3G.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/Timezone-master (2).zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Custom Libraries/Ubidots_FONATim.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ISCO_Versions/_094_Pod_ISCOv1.07/_094_Pod_ISCOv1.07.ino" beforeDir="false" afterPath="$PROJECT_DIR$/../ISCO_Versions/_094_Pod_ISCOv1.07/_094_Pod_ISCOv1.07.ino" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -23,7 +37,7 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="com.digi.micropython.xbee_platform" value="Digi XBee3 Cellular LTE Cat 1" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PythonContentEntriesConfigurable" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -54,43 +68,45 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state x="137" y="19" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1608306886739">
-      <screen x="0" y="0" width="1366" height="728" />
+    <state x="193" y="27" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1609166750847">
+      <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="137" y="19" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1366.728@0.0.1366.728" timestamp="1608306886739" />
+    <state x="193" y="27" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1609166750847" />
     <state x="740" y="262" key="FileChooserDialogImpl" timestamp="1607548332016">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="740" y="262" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1607548332016" />
-    <state width="1345" height="179" key="GridCell.Tab.0.bottom" timestamp="1608564204570">
-      <screen x="0" y="0" width="1366" height="728" />
+    <state width="1576" height="270" key="GridCell.Tab.0.bottom" timestamp="1610038128151">
+      <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1345" height="179" key="GridCell.Tab.0.bottom/0.0.1366.728@0.0.1366.728" timestamp="1608564204570" />
-    <state width="1576" height="273" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1608260746922" />
-    <state width="1345" height="179" key="GridCell.Tab.0.center" timestamp="1608564204570">
-      <screen x="0" y="0" width="1366" height="728" />
+    <state width="1576" height="270" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1610038128151" />
+    <state width="1576" height="270" key="GridCell.Tab.0.center" timestamp="1610038128151">
+      <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1345" height="179" key="GridCell.Tab.0.center/0.0.1366.728@0.0.1366.728" timestamp="1608564204570" />
-    <state width="1576" height="273" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1608260746921" />
-    <state width="1345" height="179" key="GridCell.Tab.0.left" timestamp="1608564204570">
-      <screen x="0" y="0" width="1366" height="728" />
+    <state width="1576" height="270" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1610038128151" />
+    <state width="1576" height="270" key="GridCell.Tab.0.left" timestamp="1610038128151">
+      <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1345" height="179" key="GridCell.Tab.0.left/0.0.1366.728@0.0.1366.728" timestamp="1608564204570" />
-    <state width="1576" height="273" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1608260746921" />
-    <state width="1345" height="179" key="GridCell.Tab.0.right" timestamp="1608564204570">
-      <screen x="0" y="0" width="1366" height="728" />
+    <state width="1576" height="270" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1610038128151" />
+    <state width="1576" height="270" key="GridCell.Tab.0.right" timestamp="1610038128151">
+      <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state width="1345" height="179" key="GridCell.Tab.0.right/0.0.1366.728@0.0.1366.728" timestamp="1608564204570" />
-    <state width="1576" height="273" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1608260746921" />
-    <state x="184" y="6" key="SettingsEditor" timestamp="1608300638991">
-      <screen x="0" y="0" width="1366" height="728" />
+    <state width="1576" height="270" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1610038128151" />
+    <state x="259" y="9" key="SettingsEditor" timestamp="1610046365931">
+      <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="184" y="6" key="SettingsEditor/0.0.1366.728@0.0.1366.728" timestamp="1608300638991" />
-    <state x="806" y="244" width="457" height="238" key="com.intellij.ide.util.TipDialog" timestamp="1608308475865">
-      <screen x="0" y="0" width="1366" height="728" />
+    <state x="259" y="9" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1610046365931" />
+    <state x="1133" y="348" width="457" height="238" key="com.intellij.ide.util.TipDialog" timestamp="1609960052889">
+      <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="806" y="244" width="457" height="238" key="com.intellij.ide.util.TipDialog/0.0.1366.728@0.0.1366.728" timestamp="1608308475865" />
-    <state x="1133" y="348" width="607" height="340" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1608255653025" />
+    <state x="1133" y="348" width="607" height="340" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1609960052889" />
     <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1607472041729">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>

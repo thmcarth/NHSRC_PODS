@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="XBee MicroPython" type="python">
     <CLASSES>
-      <root url="file://$APPLICATION_PLUGINS_DIR$/xbee-micropython/typehints/xbee_micropython" />
+      <root url="file://$APPLICATION_PLUGINS_DIR$/xbee-micropython/typehints/digi_micropython" />
     </CLASSES>
     <SOURCES />
   </library>
