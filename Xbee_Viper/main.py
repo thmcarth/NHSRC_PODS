@@ -151,16 +151,27 @@ def create_time(array):
 
     year = array[0]
     month = array[1]
+    month = str(month)
+    if len(month) is 1:
+        month = "0" + month
     day = array[2]
     day = str(day)
     if len(day) is 1:
         day = "0" + day
     hour = array[3]
+    hour = str(hour)
+    if len(hour) is 1:
+        hour = "0" + hour
     minute = array[4]
+    minute = str(minute)
+    if len(minute) is 1:
+        minute = "0" + minute
     second = array[5]
+    second = str(second)
+    if len(second) is 1:
+        second = "0" + second
     yearday = array[6]
-    total_time = "" + str(year) + "-" + str(month) + "-" + str(day) + "T" + str(hour) + ":" + str(minute) + ":" + str(
-        second) + "-05:00"
+    total_time = "" + str(year) + "-" + str(month) + "-" + str(day) + "T" + str(hour) + ":" + str(minute) + ":" + str(second) + "-05:00"
     if not deployed:
         print("Total Time: ", total_time)
     return total_time
@@ -173,6 +184,9 @@ def read_serial():
     Reads in 3 sets of serial data and combines them to ensure all data is received.  Because Serial BUS is slow
     Take all serial data and look at the first character to run through check serial type function
     Decides what to do with serial data: text, mass text, or post to viper
+
+    TODO: Read in whole serial string and check for a "signal or end" character.  Not implemeented (with secondary UART)
+
     """
     global prev_sender
     global prev_msg
@@ -180,29 +194,36 @@ def read_serial():
     global ident
     global t
 
-    utime.sleep_ms(100) # DO not touch unless you are testing
+    utime.sleep_ms(150) # DO not touch unless you are testing
     serial1 = sys.stdin.read()  # UART library doesn't work here!
-    utime.sleep_ms(100) #
+    utime.sleep_ms(150) #
     serial2 = sys.stdin.read()
-    utime.sleep_ms(100)
+    utime.sleep_ms(150)
     serial3 = sys.stdin.read()
     serial = None
     if serial1 and serial2 and serial3:
         serial = str(serial1) + str(serial2)+ str(serial3)
+        # length = len(serial) #
+        # if serial[-1] is not "!":
+        #      return 0
         if not deployed:
+            """
+            READ LAST CHARCTER OF STRING 
+            if not !, then return 0 or do nothing
+            """
             print(serial1)
             print(serial2)
             print(serial3)
             print("Therefore serial(3) is ")
             print(serial)
 
-    if serial1 and serial2:
+    if serial1 and serial2 and not serial3:
         serial = str(serial1) + str(serial2)
         if not deployed:
             print(serial2)
             print("Therefore serial2 is ")
             print(serial)
-    if serial1 and not serial2:
+    if serial1 and not serial2 and not serial3:
         serial = serial1
         if not deployed:
             print(serial)
@@ -354,8 +375,8 @@ def ssend(body, ident, time):
                      '<identifier>' + str(ident) + '</identifier>\n'
                                                    '<sender>EPA_WET_BOARD_2 12-17-2020</sender>\n'
                                                    '<sent>' + str(time) + '</sent>\n'
-                                                                          '<source>Board2,BoardTest2,'
-                                                                          '2,2</source>\n'
+                                                                          '<source>Board 0,BoardTest1,'
+                                                                          '1,2</source>\n'
                                                                           '<info>\n'
                                                                           '<headline>' + str(body) + '</headline>\n'
                                                                                                      '<area>\n'
