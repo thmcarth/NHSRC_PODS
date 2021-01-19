@@ -35,7 +35,7 @@ Hawes Collier
 
 char GPS[] = "40.5087450, -74.3580650 0"; //needs a (space 0) at the end, example ="35.068471,-89.944730 0"
 int unit = 1;
-char versionNum[] = "_094_Pod_ISCOv1.06";
+char versionNum[] = "_094_Pod_ISCOv1.07";
 
 //////////////////////////////////
 
@@ -64,6 +64,7 @@ char dateChar[5];
 char hourChar[5];
 char minuteChar[5];
 char secondChar[5];
+
 boolean isDST = false;
 ///////////////////////////////////////
 
@@ -109,8 +110,8 @@ unsigned long UpdateRate = 4000; //Number of ms between serial prints, 4 seconds
 uint8_t ADR = 0x08; //Address of slave device, 0x08 by default
 long rain_period = 30000;
 long previousMillis = 0; 
-String rain_level = ""; //0 is no rain, 1 is little, 2 is some, 3 is lots of rain 
-int droplet_pin = 10;
+int rain_level = 1; //1 is no rain, 2 is little, 3 is lots of rain 
+int droplet_pin = A14; // pin 33
 //INA260 comms Placeholder
 //////////////END I2C Inits
 
@@ -119,7 +120,7 @@ int droplet_pin = 10;
 #define HydraSerial Serial3
 unsigned long lastProbe = millis();
 int Probetime = 60000;
-float temp= 0, moisture= 0, conductivity = 0,permittivity =0;
+float temp= 0, moisture= 0, conductivity = 0,permittivity = 0;
 float temp2= 0, moisture2= 0, conductivity2= 0,permittivity2 = 0;
 float temp3= 0, moisture3= 0, conductivity3= 0,permittivity3 = 0;
 HydraProbe moistureSensor;  //define data Pin in Header (library .h file)
@@ -311,8 +312,14 @@ void setup() {
   moistureSensor2.begin(2);  //yellow tape
   moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
   moistureSensor3.begin(3);  // green tape
-
-
+  Serial.println(moistureSensor.getAddress());
+  Serial.println(moistureSensor2.getAddress());
+  Serial.println(moistureSensor3.getAddress());
+/*
+ * 01234567
+ * 02134567
+ * 03142567
+ */
    
     
   if (!ina260.begin()) {  // Check to see if  I2c on XBEE is on if there is no comms.  This messed up the INA.
@@ -921,6 +928,7 @@ void postData() //post Data to VIPER
     
     // format addX
     http.addInt("BottleNumber", getBottleNumber(), "/24");
+    http.addInt("MoistureReading",droplet_read(),"rM");
     http.addFloat("BatteryVoltage", getBV(), "mV");
     http.addInt("LevelReading", intWL, "0/50");
     http.addFloat("DavisRainIntensity", inch_tips, "inches");
@@ -946,7 +954,12 @@ Serial.print(permittivity2);Serial.print(",");Serial.print(temp3);Serial.print("
 Serial.print(moisture3*100);Serial.print(",");Serial.print(conductivity3);Serial.print(",");Serial.println(permittivity3);
 ident++;
     String identS = String(ident);
-    xbeeSerial.print(identS + "," + http.getData());
+
+    
+    // 2P,Data;datd;etc. is built in the HTTP Libary in the Custom Library Folder
+
+    
+    xbeeSerial.print(identS + "," + http.getData()/* + "!" */);  //place end character for data integrity.
     Serial.println(http.getData());
    // xbeeSerial.println("P"http.getData());  //backup solution
 Serial.println("Done sending to VIPER");
@@ -1216,10 +1229,10 @@ time_t compileTime()
     return t + FUDGE;           // add fudge factor to allow for compile time
 }
 
-String droplet_read(){
-  if(analogRead(droplet_pin)<300) rain_level = "High Rain";
-else if(analogRead(droplet_pin)<500) rain_level = "Medium Rain";
-else rain_level = "Little or No Rain";
+int droplet_read(){
+  if(analogRead(droplet_pin)<300) rain_level = 3;
+else if(analogRead(droplet_pin)<500) rain_level = 2;
+else rain_level = 1;
 }
 #if DAVIS
 void I2C_rain(){
