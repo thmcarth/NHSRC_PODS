@@ -18,8 +18,8 @@ unsigned long UpdateRate = 4000; //Number of ms between serial prints, 4 seconds
 uint8_t ADR = 0x08; //Address of slave device, 0x08 by default
 volatile long NumTips = 0; //Tip counter used by ISR
 long ReadTips = 0; //Used as output for sample of tip counter to store "old" value, while counter can increment, used to make code reentrant 
-int Pin = 3; //Default pin value
-int Pin_Low = 4;  //Just used to drive one side of the tipping bucket reed switch low, a digitial pin is only used to make wiring easier 
+int Pin = 2; //Default pin value
+int Pin_Low = 5;  //Just used to drive one side of the tipping bucket reed switch low, a digitial pin is only used to make wiring easier 
 int Debounce = 10;  //The minimum length of pulse which will be counted be the device, all shorter pulses are assumed to be noise
 
 int start_time = 0; //start time of intensity measurement
@@ -46,7 +46,8 @@ void loop() {
   //Serial.print("Tips thus far are: ");
   //Serial.println(NumTips);
   double long rain = NumTips * .01;
-  Intensity();
+  start_time = millis();
+  //Intensity();
 }
 void Tip() {  //ISR for tipping events
   static long StartPulse = 0; //Used as variable to measure time between interrupt edges
@@ -58,7 +59,13 @@ void Tip() {  //ISR for tipping events
 
 bool Update() {  //Call to update the number of tips from the ISR counter variable
   ReadTips = NumTips; //Get number of tips
-  NumTips = 0;  //Clear the tip counter
+  //NumTips = 0;  //Clear the tip counter
+  if(((millis() - start_time) > 60000) && digitalRead(Pin)) { //Check if the last edge was more than 1 debounce time period ago, and that the edge measured is rising
+    NumTips=0; //If true, increment the tip counter
+    start_time = 0;
+  }
+  Serial.print("ReadTips is ");
+  Serial.println(ReadTips);
   return true; //Return true as a convention for EnviroDIY
 }
 void SendTips() {  //ISR for I2C requests
@@ -68,21 +75,21 @@ void SendTips() {  //ISR for I2C requests
   Wire.write(ReadTips); //Respond with number of tips since last call
 }
 // next function to find intensity
-void Intensity(){
-  if (start){
-if (current_time == 0){
-  current_time = millis();
-  start_time = current_time;
-}
-else if (Time_passed < Intensity_Period){
-  current_time = millis();
-  Time_passed = current_time-start_time;
-  Intensity_value = (double)NumTips/Time_passed;
-}
-else {
- Intensity_value = (double)NumTips/Time_passed;
- current_time = 0;
- Serial.print("Wow we made it to the end of the measurement");
-}
-  }
-}
+//void Intensity(){
+//  if (true){
+//if (current_time == 0){
+//  current_time = millis();
+//  start_time = current_time;
+//}
+//else if (Time_passed < Intensity_Period){
+//  current_time = millis();
+//  Time_passed = current_time-start_time;
+//  Intensity_value = (double)NumTips/Time_passed;
+//}
+//else {
+// Intensity_value = (double)NumTips/Time_passed;
+// current_time = 0;
+// Serial.print("Wow we made it to the end of the measurement");
+//}
+//  }
+//}

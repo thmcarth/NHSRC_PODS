@@ -20,11 +20,11 @@ THIS CODE IS PROVIDED "AS IS" - NO WARRANTY IS GIVEN.
 #include <Wire.h>
 
 unsigned long UpdateRate = 4000; //Number of ms between serial prints, 4 seconds by default
-uint8_t ADR = 0x08; //Address of slave device, 0x08 by default
+uint8_t ADR = 8; //Address of slave device, 0x08 by default
 
 void setup() {
   Wire.begin();        // join i2c bus (address optional for master)
-  Serial.begin(57600);  // start serial for output
+  Serial.begin(9600);  // start serial for output
   Serial.print("Welcome to the Machine...\n\n"); //Genaric begin statment for monitor
 }
 
@@ -32,12 +32,22 @@ void loop() {
   unsigned int tips = 0; //Used to measure the number of tips
   uint8_t Byte1 = 0; //Bytes to read then concatonate
   uint8_t Byte2 = 0;
-
+  uint8_t c[2];
   Wire.requestFrom(ADR, 2);    // request 2 bytes from slave device #8
-  Byte1 = Wire.read();  //Read number of tips back
-  Byte2 = Wire.read();
+  int i = 0;
+  while(Wire.available()) { // slave may send less than requested
+    c[i++] = Wire.read();   // receive a byte as character
+    //Serial.print(c[i]);        // print the character
+  }
 
-  tips = ((Byte2 << 8) | Byte1); //Concatenate bytes
+  Serial.println();
+  //Byte1 = Wire.read();  //Read number of tips back
+  //Byte2 = Wire.read();
+  Serial.println(c[0]);
+  Serial.println(c[1]);
+  
+
+  tips = ((c[1] << 8) | c[0]); //Concatenate bytes
 
   Serial.print("Number of Tips since last read = ");
 

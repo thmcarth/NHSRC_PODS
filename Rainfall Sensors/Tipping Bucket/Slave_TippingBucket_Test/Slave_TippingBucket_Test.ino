@@ -28,8 +28,8 @@ THIS CODE IS PROVIDED "AS IS" - NO WARRANTY IS GIVEN.
 
 volatile long NumTips = 0; //Tip counter used by ISR
 long ReadTips = 0; //Used as output for sample of tip counter to store "old" value, while counter can increment, used to make code reentrant 
-int Pin = 3; //Default pin value
-int Pin_Low = 4;  //Just used to drive one side of the tipping bucket reed switch low, a digitial pin is only used to make wiring easier 
+int Pin = 2; //Default pin value
+int Pin_Low = 5;  //Just used to drive one side of the tipping bucket reed switch low, a digitial pin is only used to make wiring easier 
 int Debounce = 10;  //The minimum length of pulse which will be counted be the device, all shorter pulses are assumed to be noise
 //In experimentation, tipping bucket pulses are close to 100ms, so a debounce period of 10ms is sufficiently conservative to never miss a pulse, but was also found to remove all 
 //"bounce" errors in testing. If erronious tips seem to be counted (more tips in a period than you observe), you can try increasing this value, but caution is advised, when in doubt, scope the line
@@ -79,11 +79,13 @@ void Tip() {  //ISR for tipping events
   static long StartPulse = 0; //Used as variable to measure time between interrupt edges
   if(((millis() - StartPulse) > Debounce) && digitalRead(Pin)) { //Check if the last edge was more than 1 debounce time period ago, and that the edge measured is rising
     NumTips++; //If true, increment the tip counter
+    Serial.println(NumTips);
   }
   StartPulse = millis(); //Keep a record of the last edge time
 }
 
 void SendTips() {  //ISR for I2C requests
+  Serial.println("Request");
   Counter = 0;  //Clear counter, this should have happened due to the wake up, but in case a weird sequence of events occours where that is not the case, clear it again to be safe
   Update(); //Update tip counts
   Wire.write(ReadTips); //Respond with number of tips since last call

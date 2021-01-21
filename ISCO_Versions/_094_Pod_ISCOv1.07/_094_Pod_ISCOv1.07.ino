@@ -102,12 +102,12 @@ int byteSent;
 
 //DAVIS RAINBUCKET
 float inch_tips;
-#define DAVIS 0
+#define DAVIS 1
 ///////////////I2C Comms
 #include <Wire.h>
 int Intensity_period = 30; // Intensity period and how often we want to ask device for rainfall intensity.
 unsigned long UpdateRate = 4000; //Number of ms between serial prints, 4 seconds by default
-uint8_t ADR = 0x08; //Address of slave device, 0x08 by default
+uint8_t ADR = 8; //Address of slave device, 0x08 by default
 long rain_period = 30000;
 long previousMillis = 0; 
 int rain_level = 1; //1 is no rain, 2 is little, 3 is lots of rain 
@@ -217,6 +217,7 @@ bool rec = false;
 
 void setup() {
   Serial.begin(9600);
+  Wire.begin();
   //int countdownMS = Watchdog.enable(600000); //600 seconds or 10 minutes watchdog timer
   //Serial.print("Enabled the watchdog with max countdown of ");
   //Serial.print(countdownMS, DEC);
@@ -384,6 +385,7 @@ if(currentWaterMillis - previousMillis > rain_period) {
     // save the last time you blinked the LED 
     previousMillis = currentWaterMillis;  
     I2C_rain();
+    
   }
 #endif
 
@@ -528,7 +530,7 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  }
 
 else if (msg[0] == '2'){
-  toggleSample();
+  Sample();
   return_msg = "Sampling";
   delay(1000);
   sendSMS(return_msg);
@@ -1242,7 +1244,7 @@ void I2C_rain(){
   uint8_t Byte2 = 0;
 
   Wire.requestFrom(ADR, 2);    // request 2 bytes from slave device #8
-  
+  Serial.println("Request");
   Byte1 = Wire.read();  //Read number of tips back
   Byte2 = Wire.read();
 
