@@ -16,7 +16,7 @@ import usocket
 import network
 import sys
 
-deployed = 1
+deployed = 1 #Deployed should be 1 whenever you are going to place the XBEE back into the field.  Otherwise, you will likely cause issues with the Teensy to Xbee communications
 test = 0
 '''
 Commands we are going to send/receive to TEENSY
@@ -375,8 +375,8 @@ def ssend(body, ident, time):
                      '<identifier>' + str(ident) + '</identifier>\n'
                                                    '<sender>EPA_WET_BOARD_2 12-17-2020</sender>\n'
                                                    '<sent>' + str(time) + '</sent>\n'
-                                                                          '<source>Board 0,BoardTest1,'
-                                                                          '1,2</source>\n'
+                                                                          '<source>Board8,BoardTest8,'
+                                                                          '2,2</source>\n'
                                                                           '<info>\n'
                                                                           '<headline>' + str(body) + '</headline>\n'
                                                                                                      '<area>\n'
