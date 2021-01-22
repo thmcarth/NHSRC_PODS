@@ -127,7 +127,7 @@ HydraProbe moistureSensor;  //define data Pin in Header (library .h file)
 HydraProbe moistureSensor2;
 HydraProbe moistureSensor3;
 //
-//FONA HTTP
+//Xbee Socket connection
 HTTPS_VIPER http = HTTPS_VIPER(); 
 char senderNum[30];    //holds number of last number to text SIM
 char replybuffer[255]; //holds Fonas text reply
@@ -183,6 +183,9 @@ int ident = 1;
 //ISCO
 #include <Time.h>
 #define IscoSamplePin 16
+#define version2 1
+#define version1 0
+bool accepted = false;  // Flag gets set to true when we see > character from ISCO.
 int bottle_limit = 4;
 char iscoData[500];
 int cdIndex = 0;
@@ -345,12 +348,12 @@ void loop() {
   {
     Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
     do {
-       //checkTexts();
+       request_ISCO();
     } while (iscoSerial.available() == 0 && millis() - iscoTimeout < 40000); //If there is data on the serial line, OR its been 40 seconds, continue
     iscoTimeout = millis(); //reset timer
     Serial.print("Finished waiting for ISCO...Millis = "); Serial.println(millis());
     do {  //read in data from ISCO Serial
-      readIscoSerial();
+      readIscoSerial(0);
     } while (iscoSerial.available() > 0);
   } else
   {
@@ -654,7 +657,9 @@ void checkUserInput()
     }
     if (a == 'Q')
     {
+      #if version1
       sendQuery();
+      #endif
     }
     if (a == 'G')
     {
@@ -715,7 +720,7 @@ void toggleSample()
     }
   }
 }
-
+#if version1
 void Sample()
 {
   
@@ -725,7 +730,19 @@ void Sample()
   digitalWrite(IscoSamplePin, LOW);
 
 }
+#endif
 
+#if version2
+void Sample()
+{
+  request_ISCO();
+  if (accepted){
+  iscoSerial.print("7\r");// This should use the menu command: TAKE_SAMPLE or 7
+  //iscoSerial.println("TAKE_SAMPLE\r");
+  }
+}
+#endif
+#if version1
 void sendQuery() //Function to establish comms with ISCO if needed
 {
   Serial.println("Sending query to ISCO");
@@ -759,6 +776,7 @@ void sendQuery() //Function to establish comms with ISCO if needed
   }
 
 }
+#endif
 
 void cleararray(char* a){
   for (int x =0; x < sizeof(a) / sizeof(a[0]); x++)
@@ -779,7 +797,7 @@ void clearIscoSerial()
   Serial.println("Done clearing ISCO");
 }
 
-
+#if version1
 void readIscoSerial() //CHECK FOR OVERFLOW ON THIS ARRAY
 {
   unsigned long timer = millis();
@@ -798,6 +816,73 @@ void readIscoSerial() //CHECK FOR OVERFLOW ON THIS ARRAY
 
   } while (millis() - timer < 1000);
 }
+#endif
+  //Global to see if the menu is open on the ISCO.
+#if version2
+void readIscoSerial(int comm) //CHECK FOR OVERFLOW ON THIS ARRAY
+{
+  
+  String data = "";
+  unsigned long timer = millis();
+ 
+  do
+  {
+    if (iscoSerial.available())
+    {
+      char a = iscoSerial.read();
+      if(a == '>')
+      accepted = true;
+      if (cdIndex < sizeof(iscoData))
+      {
+        iscoData[cdIndex] = a; //here might need to ring buffer
+      }
+      ++cdIndex;
+    if (accepted and comm == 1)
+        Sample();
+
+
+  }} while (millis() - timer < 2000);
+}
+#endif
+
+#if version2
+void request_ISCO() //CHECK FOR OVERFLOW ON THIS ARRAY
+{
+  Serial.println("Sending req to ISCO");
+  iscoSerial.print("??????????????????????");
+
+  delay(2000);
+  if (!iscoSerial.available())
+  {
+    iscoSerial.print("??????????????????????");
+
+    delay(2000);
+    //Serial.println("Trying another baud...");
+  } else
+  {
+    //readIscoSerial(comm);
+  }
+  if (!iscoSerial.available())
+  {
+    iscoSerial.print('?');
+  
+    delay(10);
+    Serial.println("3rd baud attempt...");
+  } else
+  {
+   // readIscoSerial(comm);
+  }
+  delay(2000);
+  if (!iscoSerial.available())
+  {
+    Serial.println("No data available...giving up");
+  }
+  else{
+   // readIscoSerial(comm);
+  }
+
+}
+#endif
 int getBottleNumber() //parse the bottle Number from ISCO input
 {
   /*
