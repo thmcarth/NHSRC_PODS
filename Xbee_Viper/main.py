@@ -194,18 +194,19 @@ def read_serial():
     global ident
     global t
 
-    utime.sleep_ms(150) # DO not touch unless you are testing
+    utime.sleep_ms(20) # DO not touch unless you are testing
     serial1 = sys.stdin.read()  # UART library doesn't work here!
-    utime.sleep_ms(150) #
+    utime.sleep_ms(200) #
     serial2 = sys.stdin.read()
-    utime.sleep_ms(150)
+    utime.sleep_ms(200)
     serial3 = sys.stdin.read()
     serial = None
     if serial1 and serial2 and serial3:
         serial = str(serial1) + str(serial2)+ str(serial3)
-        # length = len(serial) #
-        # if serial[-1] is not "!":
-        #      return 0
+        if serial[-1] is not "!":
+            return 0
+        else:
+            serial = serial[:-1]
         if not deployed:
             """
             READ LAST CHARCTER OF STRING 
@@ -219,18 +220,23 @@ def read_serial():
 
     if serial1 and serial2 and not serial3:
         serial = str(serial1) + str(serial2)
+        if serial[-1] is not "!":
+            return 0
+        else:
+            serial = serial[:-1]
         if not deployed:
             print(serial2)
             print("Therefore serial2 is ")
             print(serial)
     if serial1 and not serial2 and not serial3:
         serial = serial1
+        if serial[-1] is not "!":
+            return 0
         if not deployed:
             print(serial)
 
     if serial:
         types = check_serial_type(serial)
-        #c.sms_send(2524126262, "types is " + str(types))
         if types is 0:
             return 0
         elif types is 1:  # post to viper DEPRECATED.  Checks for IDent now in teensy string instead of using Xbee to update Idenmt
@@ -259,7 +265,7 @@ def read_serial():
         elif types is 6 and prev_msg is not None:
             print(prev_msg)
             prev_msg = None
-            c.sms_send(2524126262, "? received")
+            # c.sms_send(2524126262, "? received")
     else:
         return 0
 
@@ -375,8 +381,8 @@ def ssend(body, ident, time):
                      '<identifier>' + str(ident) + '</identifier>\n'
                                                    '<sender>EPA_WET_BOARD_2 12-17-2020</sender>\n'
                                                    '<sent>' + str(time) + '</sent>\n'
-                                                                          '<source>Board8,BoardTest8,'
-                                                                          '2,2</source>\n'
+                                                                          '<source>Board 0,BoardTest1,'
+                                                                          '1,2</source>\n'
                                                                           '<info>\n'
                                                                           '<headline>' + str(body) + '</headline>\n'
                                                                                                      '<area>\n'
