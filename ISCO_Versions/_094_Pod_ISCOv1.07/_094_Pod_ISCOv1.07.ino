@@ -95,7 +95,7 @@ const int RS485_TRANSMIT = HIGH;
 const int RS485_RECEIVE = LOW;
 String parsivel_data;
 char* parsivel_intensity;
-SoftwareSerial ParsivelSerial(SSERIAL_RX_PIN, SSERIAL_TX_PIN); // RX, TX
+
 int byteReceived;
 int byteSent;
 /////////////////////////
@@ -117,7 +117,6 @@ int droplet_pin = A14; // pin 33
 
 
 //Hydraprobes
-#define HydraSerial Serial3
 unsigned long lastProbe = millis();
 int Probetime = 60000;
 float temp= 0, moisture= 0, conductivity = 0,permittivity = 0;
@@ -134,7 +133,7 @@ char replybuffer[255]; //holds Fonas text reply
 char * replybuffer_command; //holds Fonas command part
 char * replybuffer_interval; //holds Fonas interval part
 #define xbeeSerial Serial1
-#define parsivelSerial Serial2
+//#define parsivelSerial Serial2
 int commandNum = -1; //integer value for which text command has been sent
 unsigned long lastPost = millis();
 float minsToPost = 5;
@@ -186,7 +185,8 @@ int ident = 1;
 #define version2 1
 #define version1 0
 bool accepted = false;  // Flag gets set to true when we see > character from ISCO.
-int bottle_limit = 4;
+//  bottle_limit = 23; Do not exceed this!
+int bottle_number = 1;
 char iscoData[500];
 int cdIndex = 0;
 bool grabSampleMode = true;
@@ -306,7 +306,7 @@ void setup() {
   digitalWrite(IscoSamplePin, LOW);
   Serial.begin(115200);
   iscoSerial.begin(9600); //Setup comms with ISCO
-  //parsivelSerial.begin(19200);
+
   //Watchdog.reset();
   //delay(5000);
   //massSMS("Testing WET Board mass Text (from Teensy)");
@@ -334,7 +334,7 @@ void setup() {
   }
 }
 void loop() {
-  
+  checkUserInput();
   rec = false;
   
   unsigned long currentTime = millis();
@@ -343,7 +343,8 @@ void loop() {
     //Watchdog.reset();
     checkTexts(); //check for SMS commands
 
-    
+    Serial.print("Droplet reader level (1-3) is ");
+    Serial.println(droplet_read());
   if (ISCORail) // this is true at start
   {
     Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
@@ -522,6 +523,10 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   Serial.println(msg);
  }
  // may need to add \0 later
+ if (msg[0] == '0'){
+  // create reset text?
+ }
+ 
  if (msg[0] == '1'){
  
  float batt = getBV(); // call for battery
@@ -630,6 +635,7 @@ void sendSMS(String message) {
   Serial.println("C"+message);
   xbeeSerial.print("C"+message);
   delay(10);
+   xbeeSerial.flush();// added this to clean up serial port after sending text message.
 }
 
 void massSMS(String message) {
@@ -645,12 +651,20 @@ void flushxbeeSerial() { // flush xbee Serial port
 
 void checkUserInput()
 {
+  Serial.println("Checking user input");
   if (Serial.available())
   {
     char a = Serial.read();
+    Serial.print("char is: ");
+    Serial.println(a);
     if (a == 'S')
     {
+      #if version1
       toggleSample();
+      #endif
+      #if version2
+      Sample();
+      #endif
     }
     if (a == 'T')
     {
@@ -735,10 +749,25 @@ void Sample()
 #if version2
 void Sample()
 {
+ 
+  /*
   request_ISCO();
   if (accepted){
   iscoSerial.print("7\r");// This should use the menu command: TAKE_SAMPLE or 7
   //iscoSerial.println("TAKE_SAMPLE\r");
+  }
+  */
+  if (bottle_number <=22){
+  bottle_number++;
+  for (int i = 0; i<3;i++){
+     digitalWrite(IscoSamplePin, HIGH);
+  delay(300);
+  digitalWrite(IscoSamplePin, LOW);
+  delay(100);
+  }
+  }
+  else {
+    sendSMS("Out of Bottles.  Stop!");
   }
 }
 #endif
@@ -849,7 +878,7 @@ void readIscoSerial(int comm) //CHECK FOR OVERFLOW ON THIS ARRAY
 void request_ISCO() //CHECK FOR OVERFLOW ON THIS ARRAY
 {
   Serial.println("Sending req to ISCO");
-  iscoSerial.print("??????????????????????");
+  iscoSerial.println("??????????????????????");
 
   delay(2000);
   if (!iscoSerial.available())
@@ -864,7 +893,7 @@ void request_ISCO() //CHECK FOR OVERFLOW ON THIS ARRAY
   }
   if (!iscoSerial.available())
   {
-    iscoSerial.print('?');
+    iscoSerial.println("????");
   
     delay(10);
     Serial.println("3rd baud attempt...");
@@ -1014,7 +1043,7 @@ void postData() //post Data to VIPER
     }
     
     // format addX
-    http.addInt("BottleNumber", getBottleNumber(), "/24");
+    http.addInt("BottleNumber", bottle_number, "/24");
     http.addInt("MoistureReading",droplet_read(),"rM");
     http.addFloat("BatteryVoltage", getBV(), "mV");
     http.addInt("LevelReading", intWL, "0/50");
@@ -1317,9 +1346,12 @@ time_t compileTime()
 }
 
 int droplet_read(){
-  if(analogRead(droplet_pin)<300) rain_level = 3;
-else if(analogRead(droplet_pin)<500) rain_level = 2;
+  if(analogRead(A14)<300) rain_level = 3;
+else if(analogRead(A14)<500) rain_level = 2;
 else rain_level = 1;
+Serial.print("Analog Reading is: ");
+Serial.println(analogRead(A14));
+return rain_level;
 }
 #if DAVIS
 void I2C_rain(){
