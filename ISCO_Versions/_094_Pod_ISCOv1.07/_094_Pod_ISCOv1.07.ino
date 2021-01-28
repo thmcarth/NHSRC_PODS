@@ -505,20 +505,21 @@ for ( i = 0; i < len; i++)
 void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
 {
   int ind = 0;
-  String msg;
-  String return_msg;
+  String msg = "";
+  String return_msg = "";
  if (!rec)
  {
    xbeeSerial.print("?!"); //Sends a ? to the XBEE, prompting the Xbee to send over the Text data.
-   //xbeeSerial.flush();
+   xbeeSerial.flush();
  }
 
 
  delay(10);  //Wait for Text data
- if (xbeeSerial.available()>0)
+ if (xbeeSerial.available()>0){
  msg = xbeeSerial.readString();
  msg = msg.trim();
  ind = msg.length();
+ }
  //Serial.print("msg is: " + msg + " length is ");
  //Serial.println(msg.length());
  if (msg.length() == 0){
@@ -534,7 +535,7 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   // create reset text?
  }
  
- if (msg[0] == '1'){
+ if (msg[0] == '1' && msg.length() == 1){
  
  float batt = getBV(); // call for battery
  String battString = String(batt);
@@ -544,7 +545,7 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  Serial.println("Found something!");
  }
 
-else if (msg[0] == '2'){
+else if (msg[0] == '2'&& msg.length() == 1){
   Sample();
   return_msg = "Sampling";
   delay(1000);
@@ -552,7 +553,7 @@ else if (msg[0] == '2'){
   rec = true;
  }
  
-else if (msg[0] =='3'){
+else if (msg[0] =='3'&& msg.length() == 1){
  if (ISCORail)
       {
         ISCORail = false;  
@@ -567,7 +568,7 @@ else if (msg[0] =='3'){
       rec = true;
  }
  
-else if (msg[0] =='4'){
+else if (msg[0] =='4'&& msg.length() == 1){
       if (grabSampleMode)
       {
         grabSampleMode = false;
@@ -1411,7 +1412,7 @@ void serialFormat(String post){
   xbeeSerial.print(one);
   delay(12);//13/14 works ok
   xbeeSerial.print(two);
-  delay(14); 
+  delay(13); 
   xbeeSerial.print(three);
   Serial.println("Sent data across BUS to Xbee:");
   Serial.println(one);
