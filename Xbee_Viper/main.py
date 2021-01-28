@@ -273,7 +273,6 @@ def read_serial():
             send_text(serial)
             # prev_sender = None
         elif types is 3:  # send to all users
-
             serial = serial[1:]
             send_text_all(serial)
         elif types is 4:  # post to VIPER!!!! accounts for EEPROM Identifier
@@ -646,8 +645,8 @@ while True:
         sms = msg_sms[1]
         if sms:
             prev_sender = sms['sender']
-        if msg is not None:
-            send_serial(msg)  # if true: interface with Teensy and send Teensy C#
+        if msg is not None :
+            print(msg)  # if true: interface with Teensy and send Teensy C#
             # answer = None
             # counter = 40
             prev_msg = msg
@@ -664,4 +663,4 @@ while True:
     # if true: interface with Teensy and send Teensy C#
     # check timer for VIPER POST
 
-    utime.sleep_ms(50)
+    utime.sleep_ms(100)
