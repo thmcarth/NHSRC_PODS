@@ -1081,7 +1081,7 @@ ident++;
 
     
     // 2P,Data;datd;etc. is built in the HTTP Libary in the Custom Library Folder
-   //xbeeSerial.flush();
+   xbeeSerial.flush();
     String data = String(http.getData());
     data = identS + "<" + data + "!";
     Serial.print("Data to format is: ");
@@ -1089,8 +1089,8 @@ ident++;
     serialFormat(data);
     //xbeeSerial.print(identS + "," + http.getData() + "!");  //place end character for data integrity.
     Serial.println(http.getData());
-    delay(5000);
-    //xbeeSerial.flush();
+    //delay(200);
+    xbeeSerial.flush();
    // xbeeSerial.println("P"http.getData());  //backup solution
 Serial.println("Done sending to VIPER");
 }
@@ -1409,9 +1409,9 @@ void serialFormat(String post){
   String three = post.substring(d*2);
 
   xbeeSerial.print(one);
-  delay(14);
+  delay(12);//13/14 works ok
   xbeeSerial.print(two);
-  delay(14);
+  delay(14); 
   xbeeSerial.print(three);
   Serial.println("Sent data across BUS to Xbee:");
   Serial.println(one);
