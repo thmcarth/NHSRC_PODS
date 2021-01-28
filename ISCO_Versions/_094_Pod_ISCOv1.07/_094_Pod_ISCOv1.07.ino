@@ -136,7 +136,7 @@ char * replybuffer_interval; //holds Fonas interval part
 //#define parsivelSerial Serial2
 int commandNum = -1; //integer value for which text command has been sent
 unsigned long lastPost = millis();
-float minsToPost = 5;
+float minsToPost = 2;
 //Timing for Samples
 boolean sample_occurred = false; // goes true when a sample occurs
 long sample_start = 0;  // keeps time for sample start
@@ -290,7 +290,7 @@ void setup() {
   Serial.print("Interval is ");Serial.print(grabSampleInterval);Serial.println("minutes");
 
   
-  xbeeSerial.begin(9600); 
+  xbeeSerial.begin(115200); 
   //Startup SMS and Cell client DO NOT CHANGE THIS BAUD RATE UNLESS YOU CHANGE XBEE BAUD RATE WITH XCTU
   //  Future design notes for Wiley and team: 
   //  If you can setup serial1 for the alternative UART that Xbee uses with its UART class, we may have more fine control functionality
@@ -332,6 +332,8 @@ void setup() {
   else{
   Serial.println("Found INA260 chip!"); 
   }
+
+  
 }
 void loop() {
   checkUserInput();
@@ -349,12 +351,12 @@ void loop() {
   {
     Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
     do {
-       request_ISCO();
+       //request_ISCO();
     } while (iscoSerial.available() == 0 && millis() - iscoTimeout < 40000); //If there is data on the serial line, OR its been 40 seconds, continue
     iscoTimeout = millis(); //reset timer
     Serial.print("Finished waiting for ISCO...Millis = "); Serial.println(millis());
     do {  //read in data from ISCO Serial
-      readIscoSerial(0);
+      //readIscoSerial(0);
     } while (iscoSerial.available() > 0);
   } else
   {
@@ -375,7 +377,7 @@ void loop() {
     postData();
     http.clearData();
     lastPost = millis(); //reset timer
-    clearIscoSerial(); //clear isco and fona serials
+    //clearIscoSerial(); //clear isco and fona serials
   } else
   {
     Serial.print(((minsToPost * 60000) - (currentTime - lastPost)) / 1000); Serial.println(" Seconds left b4 Post");
@@ -467,6 +469,10 @@ if(currentWaterMillis - previousMillis > rain_period) {
  Serial.println("Here_end_loop");
   
  ////Watchdog.reset();
+ if (xbeeSerial.available()){
+ Serial.println("Data sitting on line!");
+ Serial.println(xbeeSerial.read());
+ }
 }
 
 
@@ -503,7 +509,8 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   String return_msg;
  if (!rec)
  {
-   xbeeSerial.print("?"); //Sends a ? to the XBEE, prompting the Xbee to send over the Text data.
+   xbeeSerial.print("?!"); //Sends a ? to the XBEE, prompting the Xbee to send over the Text data.
+   //xbeeSerial.flush();
  }
 
 
@@ -633,14 +640,15 @@ void sendSMS(String message) {
   // send an SMS!
   Serial.print("Sending: ");
   Serial.println("C"+message);
-  xbeeSerial.print("C"+message);
+  xbeeSerial.print("C"+message+"!");
   delay(10);
    xbeeSerial.flush();// added this to clean up serial port after sending text message.
+   
 }
 
 void massSMS(String message) {
   // send an SMS!
-  xbeeSerial.print("A"+message);
+  xbeeSerial.print("A"+message+"!");
 }
 
 void flushxbeeSerial() { // flush xbee Serial port
@@ -1073,10 +1081,16 @@ ident++;
 
     
     // 2P,Data;datd;etc. is built in the HTTP Libary in the Custom Library Folder
-
-    
-    xbeeSerial.print(identS + "," + http.getData()/* + "!" */);  //place end character for data integrity.
+   //xbeeSerial.flush();
+    String data = String(http.getData());
+    data = identS + "<" + data + "!";
+    Serial.print("Data to format is: ");
+    Serial.println(data);
+    serialFormat(data);
+    //xbeeSerial.print(identS + "," + http.getData() + "!");  //place end character for data integrity.
     Serial.println(http.getData());
+    delay(5000);
+    //xbeeSerial.flush();
    // xbeeSerial.println("P"http.getData());  //backup solution
 Serial.println("Done sending to VIPER");
 }
@@ -1382,7 +1396,28 @@ void I2C_rain(){
 }
 #endif
 
+  
 
+
+void serialFormat(String post){
+
+  int len = post.length();
+  int d = len/3;
+
+  String one = post.substring(0,d);
+  String two = post.substring(d,d*2);
+  String three = post.substring(d*2);
+
+  xbeeSerial.print(one);
+  delay(14);
+  xbeeSerial.print(two);
+  delay(14);
+  xbeeSerial.print(three);
+  Serial.println("Sent data across BUS to Xbee:");
+  Serial.println(one);
+  Serial.println(two);
+  Serial.println(three);
+ }
 
 void checkHydraProbes()
 //Checks all Hydraprobes and grabs 4 data points (temperature, Moisture,conductivity and permittivity

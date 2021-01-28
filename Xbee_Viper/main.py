@@ -16,8 +16,8 @@ import usocket
 import network
 import sys
 
-deployed = 1 #Deployed should be 1 whenever you are going to place the XBEE back into the field.  Otherwise, you will likely cause issues with the Teensy to Xbee communications
-test = 0
+deployed = 1  # Deployed should be 1 whenever you are going to place the XBEE back into the field.  Otherwise, you will likely cause issues with the Teensy to Xbee communications
+test = 1
 '''
 Commands we are going to send/receive to TEENSY
 
@@ -111,6 +111,7 @@ t = 0
 allowed = ["2524126262", "9198860812", "5179451531", "6157148918", "9194233837", "9192301472",
            "9196019412"]
 prev_sender = ""
+prev_msg = None
 
 
 def time_counter(seconds):
@@ -171,7 +172,8 @@ def create_time(array):
     if len(second) is 1:
         second = "0" + second
     yearday = array[6]
-    total_time = "" + str(year) + "-" + str(month) + "-" + str(day) + "T" + str(hour) + ":" + str(minute) + ":" + str(second) + "-05:00"
+    total_time = "" + str(year) + "-" + str(month) + "-" + str(day) + "T" + str(hour) + ":" + str(minute) + ":" + str(
+        second) + "-05:00"
     if not deployed:
         print("Total Time: ", total_time)
     return total_time
@@ -187,6 +189,9 @@ def read_serial():
 
     TODO: Read in whole serial string and check for a "signal or end" character.  Not implemeented (with secondary UART)
 
+            READ LAST CHARACTER OF STRING
+            if not !, then return 0 or do nothing
+
     """
     global prev_sender
     global prev_msg
@@ -194,24 +199,31 @@ def read_serial():
     global ident
     global t
 
-    utime.sleep_ms(20) # DO not touch unless you are testing
     serial1 = sys.stdin.read()  # UART library doesn't work here!
-    utime.sleep_ms(200) #
+    utime.sleep_ms(15)
     serial2 = sys.stdin.read()
-    utime.sleep_ms(200)
+    utime.sleep_ms(15)
     serial3 = sys.stdin.read()
+    """
+    if test:
+        if c.isconnected() and serial1:
+            c.sms_send(2524126262, serial1[:2])
+        if c.isconnected() and serial2:
+            c.sms_send(2524126262, serial2[:2])
+        if c.isconnected() and serial3:
+            c.sms_send(2524126262, serial3[:2])
+    """
     serial = None
     if serial1 and serial2 and serial3:
-        serial = str(serial1) + str(serial2)+ str(serial3)
+        serial = str(serial1) + str(serial2) + str(serial3)
         if serial[-1] is not "!":
+            if c.isconnected():
+                c.sms_send(2524126262, "not !, 3")
+                # c.sms_send(2524126262, serial[-10:])
             return 0
         else:
             serial = serial[:-1]
         if not deployed:
-            """
-            READ LAST CHARCTER OF STRING 
-            if not !, then return 0 or do nothing
-            """
             print(serial1)
             print(serial2)
             print(serial3)
@@ -221,6 +233,9 @@ def read_serial():
     if serial1 and serial2 and not serial3:
         serial = str(serial1) + str(serial2)
         if serial[-1] is not "!":
+            if c.isconnected():
+                c.sms_send(2524126262, "not !, 2")
+                # c.sms_send(2524126262, serial[-10:])
             return 0
         else:
             serial = serial[:-1]
@@ -231,7 +246,12 @@ def read_serial():
     if serial1 and not serial2 and not serial3:
         serial = serial1
         if serial[-1] is not "!":
+            if c.isconnected():
+                c.sms_send(2524126262, "not !, 1")
+                # c.sms_send(2524126262, serial[-10:])
             return 0
+        else:
+            serial = serial[:-1]
         if not deployed:
             print(serial)
 
@@ -248,7 +268,7 @@ def read_serial():
 
         elif types is 2:  # send to users
             serial = serial[1:]
-            #c.sms_send(2524126262, "Got a C command")
+            # c.sms_send(2524126262, "Got a C command")
             send_text(serial)
             # prev_sender = None
         elif types is 3:  # send to all users
@@ -256,9 +276,15 @@ def read_serial():
             serial = serial[1:]
             send_text_all(serial)
         elif types is 4:  # post to VIPER!!!! accounts for EEPROM Identifier
+            if c.isconnected():
+                c.sms_send(2524126262, "Posting")
             t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
             t = create_time(t)
-            comma = serial.find(",")
+            comma = serial.find("<")
+            if comma is -1:
+                if c.isconnected():
+                    c.sms_send(2524126262, "No <")
+                return 0
             ident = serial[:comma]
             serial = serial[comma + 2:]
             ssend(serial, ident, t)
@@ -275,6 +301,10 @@ def send_serial(message):
         print("sending a message over serial")
     print(message)  # UART library doesn't work here!
 
+# def parse_message(msg):
+#     while True:
+
+
 
 def check_serial_type(msg):
     if msg:
@@ -289,7 +319,7 @@ def check_serial_type(msg):
             "p": 1,
             "c": 2,
             "a": 3,
-            "k":5,  # deprecate not used anymore
+            "k": 5,  # deprecate not used anymore
             "?": 6
         }
         return switcher.get(first, 0)
@@ -370,7 +400,7 @@ def ssend(body, ident, time):
         if test:
             if c.isconnected():
                 c.sms_send(2524126262, ident)
-                #c.sms_send(2524126262, time)
+                # c.sms_send(2524126262, time)
         if not deployed:
             print("\n Starting Response \n")
             print("Body is:" + str(body))
@@ -381,12 +411,12 @@ def ssend(body, ident, time):
                      '<identifier>' + str(ident) + '</identifier>\n'
                                                    '<sender>EPA_WET_BOARD_2 12-17-2020</sender>\n'
                                                    '<sent>' + str(time) + '</sent>\n'
-                                                                          '<source>Board 0,BoardTest1,'
-                                                                          '1,2</source>\n'
+                                                                          '<source>Board2,BoardTest2,'
+                                                                          '2,2</source>\n'
                                                                           '<info>\n'
                                                                           '<headline>' + str(body) + '</headline>\n'
                                                                                                      '<area>\n'
-                                                                                                     '<circle>38.904722, -77.016389 0</circle>\n' # !!!!!!!!! Change coords for each deployment 
+                                                                                                     '<circle>38.904722, -77.016389 0</circle>\n'  # !!!!!!!!! Change coords for each deployment 
                                                                                                      '</area>\n'
                                                                                                      '</info>\n'
                                                                                                      '</alert>\n',
@@ -395,7 +425,7 @@ def ssend(body, ident, time):
         socketObject.connect(("remote.ertviper.org", 8038))
         if not deployed:
             print(" Sending \n")
-        socketObject.send(post)
+        socketObject.write(post)
         if not deployed:
             print(socketObject.readline())
             print("Printing the remainder of the server's response: \n")
@@ -595,6 +625,7 @@ def check_number(number):
 prev_msg = None
 
 while True:
+
     """Runs while loop functionality of xbee. 
             ---check for texts
             ---is message is valid, create a new message to send to Teensy as a command
@@ -632,4 +663,4 @@ while True:
     # if true: interface with Teensy and send Teensy C#
     # check timer for VIPER POST
 
-    utime.sleep_ms(1000)
+    utime.sleep_ms(50)
