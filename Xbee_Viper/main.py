@@ -276,14 +276,14 @@ def read_serial():
             serial = serial[1:]
             send_text_all(serial)
         elif types is 4:  # post to VIPER!!!! accounts for EEPROM Identifier
-            if c.isconnected():
-                c.sms_send(2524126262, "Posting")
+            # if c.isconnected():
+            #   c.sms_send(2524126262, "Posting")
             t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
             t = create_time(t)
             comma = serial.find("<")
             if comma is -1:
-                if c.isconnected():
-                    c.sms_send(2524126262, "No <")
+                # if c.isconnected():
+                 #   c.sms_send(2524126262, "No <")
                 return 0
             ident = serial[:comma]
             serial = serial[comma + 2:]

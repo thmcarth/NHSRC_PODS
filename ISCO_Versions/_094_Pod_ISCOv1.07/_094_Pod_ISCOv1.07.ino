@@ -102,13 +102,14 @@ int byteSent;
 
 //DAVIS RAINBUCKET
 float inch_tips;
+float inch_tips_total;
 #define DAVIS 1
 ///////////////I2C Comms
 #include <Wire.h>
 int Intensity_period = 30; // Intensity period and how often we want to ask device for rainfall intensity.
 unsigned long UpdateRate = 4000; //Number of ms between serial prints, 4 seconds by default
 uint8_t ADR = 8; //Address of slave device, 0x08 by default
-long rain_period = 30000;
+long rain_period = 60000;
 long previousMillis = 0; 
 int rain_level = 1; //1 is no rain, 2 is little, 3 is lots of rain 
 int droplet_pin = A14; // pin 33
@@ -1368,7 +1369,7 @@ return rain_level;
 }
 #if DAVIS
 void I2C_rain(){
-
+   static int counter = 1; //for 30 min avg.
    unsigned int tips = 0; //Used to measure the number of tips
   uint8_t Byte1 = 0; //Bytes to read then concatonate
   uint8_t Byte2 = 0;
@@ -1391,7 +1392,12 @@ void I2C_rain(){
       inch_tips = tips/100;
       tips = tips/Intensity_period;
       Serial.println(tips);  //Prints out tips to monitor
+      inch_tips_total = inch_tips/(counter++);
+      if (counter >= 30)
+      counter = 1;
   }
+
+ 
 }
 #endif
 
