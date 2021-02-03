@@ -316,9 +316,7 @@ void setup() {
   moistureSensor2.begin(2);  //yellow tape
   moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
   moistureSensor3.begin(3);  // green tape
-  Serial.println(moistureSensor.getAddress());
-  Serial.println(moistureSensor2.getAddress());
-  Serial.println(moistureSensor3.getAddress());
+ 
 /*
  * 01234567
  * 02134567

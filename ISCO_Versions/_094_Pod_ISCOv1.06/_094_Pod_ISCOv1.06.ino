@@ -182,6 +182,8 @@ int ident = 1;
 //ISCO
 #include <Time.h>
 #define IscoSamplePin 16
+#define version2 0
+#define version1 1
 int bottle_limit = 4;
 char iscoData[500];
 int cdIndex = 0;
