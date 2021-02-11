@@ -1,11 +1,9 @@
- #include <Adafruit_INA260.h>
+#include <Adafruit_INA260.h>
 #include <HTTPS_VIPER.h>
-//#include <Adafruit_FONA.h>
 #include <HydraProbe.h>
 #include <Timezone.h>
 #include <Time.h>
 #include <TimeLib.h>
-//#include <Ubidots_FONA.h>
 #include <SoftwareSerial.h>
 
 /* * Teensy 3.5 Custom PCB developed to automate ISCO 6700 Sampling with a digital output pin
@@ -137,7 +135,7 @@ char * replybuffer_interval; //holds Fonas interval part
 //#define parsivelSerial Serial2
 int commandNum = -1; //integer value for which text command has been sent
 unsigned long lastPost = millis();
-float minsToPost = 1.5;
+float minsToPost = 5;
 //Timing for Samples
 boolean sample_occurred = false; // goes true when a sample occurs
 long sample_start = 0;  // keeps time for sample start
@@ -145,6 +143,8 @@ long sample_stop = 0; // once this
 long sample_stop_time = 5;  // 5 minutes
 long sample_period = 8;// 8 hours
 int  samples_allowed = 2;
+unsigned long text_time = 0;
+unsigned long text_period = 5000;//15000
 ////////////////////////////
 
 //Voltage Readings
@@ -220,7 +220,7 @@ bool rec = false;
 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Wire.begin();
   //int countdownMS = Watchdog.enable(600000); //600 seconds or 10 minutes watchdog timer
   //Serial.print("Enabled the watchdog with max countdown of ");
@@ -305,7 +305,7 @@ void setup() {
   
   pinMode(IscoSamplePin, OUTPUT);  // Setup sample pin output to make ISCO sample when function is called to flip this pin
   digitalWrite(IscoSamplePin, LOW);
-  Serial.begin(115200);
+  //Serial.begin(115200);
   iscoSerial.begin(9600); //Setup comms with ISCO
 
   //Watchdog.reset();
@@ -335,18 +335,19 @@ void setup() {
   
 }
 void loop() {
-  checkUserInput();
+  delay(5000);
+  //checkUserInput();
   rec = false;
   
   unsigned long currentTime = millis();
 
   
     //Watchdog.reset();
-    checkTexts(); //check for SMS commands
+   // checkTexts(); //check for SMS commands
 
     Serial.print("Droplet reader level (1-3) is ");
     Serial.println(droplet_read());
-  if (ISCORail) // this is true at start
+  /*if (ISCORail) // this is true at start
   {
     Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
     do {
@@ -359,11 +360,12 @@ void loop() {
     } while (iscoSerial.available() > 0);
   } else
   {
-    checkTexts();
+   // checkTexts();
     delay(5000); //If ISCORail is disabled , wait 5 seconds every loop
   }
-  Serial.println("Checking texts...");
-  checkTexts(); //check for SMS commands
+  */
+  //Serial.println("Checking texts...");
+  //checkTexts(); //check for SMS commands
   //Watchdog.reset(); //ensure the system doesn't prematurely reset
   Serial.println("Made it past Texts");
   checkUserInput(); //check Serial for input commands
@@ -394,6 +396,12 @@ if(currentWaterMillis - previousMillis > rain_period) {
   }
 #endif
 
+if (currentTime - text_time >  text_period){
+   checkTexts();
+   text_time = millis();
+   delay(1000);
+  }
+ 
 
 //Watchdog.reset();
   if (currentTime - lastProbe >  Probetime){
@@ -453,7 +461,7 @@ if(currentWaterMillis - previousMillis > rain_period) {
   iscoData[cdIndex] = '\0'; //null out data
   cdIndex = 0;
 
- checkTexts();
+ //checkTexts();
 
  if (millis() - ident_save > timer_ident * 2 *  60000) //Save ident once per 2 hours 
  //EEPROM
@@ -464,13 +472,13 @@ if(currentWaterMillis - previousMillis > rain_period) {
     ident_save = millis();
     EEPROM.write(ident_ADR, ident);
   }
-  checkTexts();
+  //checkTexts();
  Serial.println("Here_end_loop");
   
  ////Watchdog.reset();
  if (xbeeSerial.available()){
- Serial.println("Data sitting on line!");
- Serial.println(xbeeSerial.read());
+ Serial.print("Data sitting on line!-->  ");
+ Serial.println(xbeeSerial.readString());
  }
 }
 
@@ -499,11 +507,6 @@ for ( i = 0; i < len; i++)
  return intensity;
 }
 
-void clearXbee(){
-   
-}
-
-
 
 void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
 {
@@ -512,16 +515,18 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   String return_msg = "";
  if (!rec)
  {
+  //xbeeSerial.flush();
    xbeeSerial.print("?!"); //Sends a ? to the XBEE, prompting the Xbee to send over the Text data.
-   xbeeSerial.flush();
+  //xbeeSerial.flush();
  }
 
 
- delay(10);  //Wait for Text data
+ delay(100);  //Wait for Text data
  if (xbeeSerial.available()>0){
  msg = xbeeSerial.readString();
  msg = msg.trim();
  ind = msg.length();
+ rec = true;
  }
  //Serial.print("msg is: " + msg + " length is ");
  //Serial.println(msg.length());
@@ -534,11 +539,11 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
   Serial.println(msg);
  }
  // may need to add \0 later
- if (msg[0] == '0'){
+ if (msg == "0"){
   // create reset text?
  }
  
- if (msg[0] == '1' && msg.length() == 1){
+ if (msg == "1" && msg.length() == 1){
  
  float batt = getBV(); // call for battery
  String battString = String(batt);
@@ -548,7 +553,7 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  Serial.println("Found something!");
  }
 
-else if (msg[0] == '2'&& msg.length() == 1){
+else if (msg[0] == "2"&& msg.length() == 1){
   Sample();
   return_msg = "Sampling";
   delay(1000);
@@ -646,7 +651,7 @@ void sendSMS(String message) {
   Serial.println("C"+message);
   xbeeSerial.print("C"+message+"!");
   delay(10);
-   xbeeSerial.flush();// added this to clean up serial port after sending text message.
+  //xbeeSerial.flush();// added this to clean up serial port after sending text message.
    
 }
 
@@ -656,7 +661,7 @@ void massSMS(String message) {
 }
 
 void flushxbeeSerial() { // flush xbee Serial port
-    xbeeSerial.flush();
+   //xbeeSerial.flush();
 }
 
 ///////////////////////////////////////**********************FONA FUNCTIONS
@@ -1082,10 +1087,10 @@ Serial.print(permittivity2);Serial.print(",");Serial.print(temp3);Serial.print("
 Serial.print(moisture3*100);Serial.print(",");Serial.print(conductivity3);Serial.print(",");Serial.println(permittivity3);
 ident++;
     String identS = String(ident);
-
+    delay(10000);
     
     // 2P,Data;datd;etc. is built in the HTTP Libary in the Custom Library Folder
-   xbeeSerial.flush();
+  //xbeeSerial.flush();
     String data = String(http.getData());
     data = identS + "<" + data + "!";
     Serial.print("Data to format is: ");
@@ -1093,7 +1098,7 @@ ident++;
     serialFormat(data);
     //xbeeSerial.print(identS + "," + http.getData() + "!");  //place end character for data integrity.
     Serial.println(http.getData());
-    //delay(200);
+    
     //xbeeSerial.flush();
    // xbeeSerial.println("P"http.getData());  //backup solution
 Serial.println("Done sending to VIPER");
@@ -1412,6 +1417,10 @@ void I2C_rain(){
 void serialFormat(String post){
 
   int len = post.length();
+  double char_speed = 1/115200;
+  float total_time = char_speed*len;
+  Serial.print("Total send time is: ");
+  Serial.println(total_time);
   int d = len/3;
 
   String one = post.substring(0,d);
@@ -1419,13 +1428,13 @@ void serialFormat(String post){
   String three = post.substring(d*2);
 
   xbeeSerial.print(one);
-  delay(30);//13/14 works ok
+  delay(7);//13/14 works ok
   // 28 28
   xbeeSerial.print(two);
-  delay(26); 
+  delay(8); 
   xbeeSerial.print(three);
-  
-  delay(50);
+// xbeeSerial.print(post);
+  delay(500);
   Serial.println("Sent data across BUS to Xbee:");
   Serial.println(one);
   Serial.println(two);
