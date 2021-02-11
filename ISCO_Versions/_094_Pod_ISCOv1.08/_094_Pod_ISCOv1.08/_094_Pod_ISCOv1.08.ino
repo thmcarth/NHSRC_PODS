@@ -27,7 +27,7 @@ Hawes Collier
 //Version 1.03 - Saving sampling mode and interval to EEPROM to hold on restart - 4/25/2018 - Tim McArthur
 //             - Writing more information to SD card\
 //Version 1.04 - Daylight Savings time, confirm Google number functions properly.
-
+//Version 1.08 - Fixes for VIPER and Texting
 
 //GPS and unit values iused in VIPER Post
 
@@ -343,8 +343,8 @@ void loop() {
 
   
     //Watchdog.reset();
-   // checkTexts(); //check for SMS commands
-
+    checkTexts(); //check for SMS commands
+   delay(1000);
     Serial.print("Droplet reader level (1-3) is ");
     Serial.println(droplet_read());
   /*if (ISCORail) // this is true at start
@@ -510,6 +510,10 @@ for ( i = 0; i < len; i++)
 
 void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
 {
+  /*
+   * Variables to hold message data before sending
+   */
+  int msg_int =0;
   int ind = 0;
   String msg = "";
   String return_msg = "";
@@ -521,29 +525,38 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  }
 
 
- delay(100);  //Wait for Text data
+ delay(200);  //Wait for Text data
  if (xbeeSerial.available()>0){
  msg = xbeeSerial.readString();
  msg = msg.trim();
+ msg.replace(" ", "");
+ msg.replace("\r", "");
+ msg.replace("\n", "");
  ind = msg.length();
  rec = true;
  }
  //Serial.print("msg is: " + msg + " length is ");
  //Serial.println(msg.length());
- if (msg.length() == 0){
+ if (ind == 0){
   //Serial.println("No valid messages");
   return;
  }
  else {
   Serial.print("message is ");
   Serial.println(msg);
+  Serial.print("Length is : ");
+  Serial.println(msg.length());
+  msg_int = msg.toInt();
+  Serial.println(msg_int);
  }
  // may need to add \0 later
+ if (msg == "?!")
+  return;
  if (msg == "0"){
   // create reset text?
  }
  
- if (msg == "1" && msg.length() == 1){
+ if (msg_int == 1 /*&& msg.length() == 1*/){
  
  float batt = getBV(); // call for battery
  String battString = String(batt);
@@ -553,7 +566,7 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  Serial.println("Found something!");
  }
 
-else if (msg[0] == "2"&& msg.length() == 1){
+else if (msg_int == 2/*&& msg.length() == 1*/){
   Sample();
   return_msg = "Sampling";
   delay(1000);
@@ -561,7 +574,7 @@ else if (msg[0] == "2"&& msg.length() == 1){
   rec = true;
  }
  
-else if (msg[0] =='3'&& msg.length() == 1){
+else if (msg_int ==3 /*&& msg.length() == 1*/){
  if (ISCORail)
       {
         ISCORail = false;  
@@ -576,7 +589,7 @@ else if (msg[0] =='3'&& msg.length() == 1){
       rec = true;
  }
  
-else if (msg[0] =='4'&& msg.length() == 1){
+else if (msg_int == 4/*&& msg.length() == 1*/){
       if (grabSampleMode)
       {
         grabSampleMode = false;
@@ -604,20 +617,21 @@ else if (msg.substring(0,3)=="5_"){  //This command is the one to change the Sam
    rec = true;
  }
 
-else if (msg[0] =="6"){  // 
+else if (msg_int ==6)
+{  // change mins to .5
   minsToPost = .5;
   return_msg = "post time changed to 30 seconds";
   sendSMS(return_msg);
   rec = true;
 }
 
-else if (msg[0] == "7"){
+else if (msg_int == 7){ //change mins to 5
   minsToPost = 5;
   return_msg = "post time changed to 5 minutes";
   sendSMS(return_msg);
   rec = true;
 }
-
+/*
 else if (msg.substring(0,2)=="8_"){
 rec = true;
   sendSMS("No Parsivel Connected");
@@ -631,6 +645,7 @@ else if (msg.substring(0,3)=="10_"){
   rec = true;
  sendSMS("No Sensor Connected");
 }
+*/
 else{
   Serial.println("No valid messages");
   return;
@@ -647,10 +662,11 @@ else{
 
 void sendSMS(String message) {
   // send an SMS!
+  delay(500);
   Serial.print("Sending: ");
   Serial.println("C"+message);
   xbeeSerial.print("C"+message+"!");
-  delay(10);
+  delay(500);
   //xbeeSerial.flush();// added this to clean up serial port after sending text message.
    
 }

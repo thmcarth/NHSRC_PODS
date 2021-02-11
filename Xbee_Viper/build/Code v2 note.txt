@@ -255,7 +255,7 @@ def read_serial():
             print(serial2)
             print("Therefore serial2 is ")
             print(serial)
-    elif serial1 and not serial2 and not serial3:  # 1
+    elif serial1 and not serial2 and not serial3: # 1
         serial = serial1
         if serial[-1] is not "!":
             if c.isconnected():
@@ -266,7 +266,7 @@ def read_serial():
             serial = serial[:-1]
         if not deployed:
             print(serial)
-    elif not serial1 and serial2 and serial3:  # 2 3
+    elif not serial1 and serial2 and serial3: # 2 3
         serial = str(serial2) + str(serial3)
         if serial[-1] is not "!":
             if c.isconnected():
@@ -277,7 +277,7 @@ def read_serial():
             serial = serial[:-1]
         if not deployed:
             print(serial)
-    elif not serial1 and not serial2 and serial3:  # 3
+    elif not serial1 and not serial2 and serial3: # 3
         serial = serial3
         if serial[-1] is not "!":
             if c.isconnected():
@@ -288,7 +288,7 @@ def read_serial():
             serial = serial[:-1]
         if not deployed:
             print(serial)
-    elif not serial1 and serial2 and not serial3:  # 2
+    elif not serial1 and serial2 and not serial3: # 2
         serial = serial2
         if serial[-1] is not "!":
             if c.isconnected():
@@ -299,7 +299,7 @@ def read_serial():
             serial = serial[:-1]
         if not deployed:
             print(serial)
-    elif serial1 and not serial2 and serial3:  # 3 1
+    elif serial1 and not serial2 and  serial3: # 3 1
         serial = str(serial1) + str(serial3)
         if serial[-1] is not "!":
             if c.isconnected():
@@ -364,10 +364,10 @@ def read_serial():
                     # answer = None
                     # counter = 40
                     #  c.sms_send(2524126262, "inside")
-                #    prev_msg = msg
-                # if prev_msg:
-                #   print(prev_msg)
-                #   prev_msg = None
+                    prev_msg = msg
+                if prev_msg:
+                    print(prev_msg)
+                    prev_msg = None
             # c.sms_send(2524126262, "? received")
     else:
         return 0
