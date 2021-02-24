@@ -111,7 +111,7 @@ t = 0
 receive = 0
 resend_data = 0
 allowed = ["2524126262", "9198860812", "5179451531", "6157148918", "9194233837", "9192301472",
-           "9196019412"]
+           "9196019412", "9199204318"]
 prev_sender = ""
 prev_msg = None
 
@@ -132,7 +132,7 @@ def time_counter(seconds):
     elapsed = 0
     while elapsed < seconds:
         elapsed = time.time() - start
-    #    print('done counting!')
+
     return None
 
 
@@ -150,7 +150,6 @@ def create_time(array):
     # (year, month, day, hour, second, day of week , day of year)
     # 2011-08-19T15:31:08-04:00 is style we want to create
     # t1 = datetime.datetime.now()
-    # print("ti is: ", t1)
 
     year = array[0]
     month = array[1]
@@ -229,8 +228,8 @@ def read_serial():
     if serial1 and serial2 and serial3:  ## 1 2 3
         serial = str(serial1) + str(serial2) + str(serial3)
         if serial[-1] is not "!":
-            if c.isconnected():
-                c.sms_send(2524126262, "not !, 1 2 3")
+            if c.isconnected() and test:
+                c.sms_send(9199204318, "not !, 1 2 3")
                 # c.sms_send(2524126262, serial[-10:])
             return 0
         else:
@@ -245,8 +244,8 @@ def read_serial():
     elif serial1 and serial2 and not serial3:  # 1 2
         serial = str(serial1) + str(serial2)
         if serial[-1] is not "!":
-            if c.isconnected():
-                c.sms_send(2524126262, "not !, 1 2")
+            if c.isconnected() and test:
+                c.sms_send(9199204318, "not !, 1 2")
                 # c.sms_send(2524126262, serial[-10:])
             return 0
         else:
@@ -258,8 +257,8 @@ def read_serial():
     elif serial1 and not serial2 and not serial3:  # 1
         serial = serial1
         if serial[-1] is not "!":
-            if c.isconnected():
-                c.sms_send(2524126262, "not !, 1")
+            if c.isconnected() and test:
+                c.sms_send(9199204318, "not !, 1")
                 # c.sms_send(2524126262, serial[-10:])
             return 0
         else:
@@ -269,8 +268,8 @@ def read_serial():
     elif not serial1 and serial2 and serial3:  # 2 3
         serial = str(serial2) + str(serial3)
         if serial[-1] is not "!":
-            if c.isconnected():
-                c.sms_send(2524126262, "not !, 2 3 ")
+            if c.isconnected() and test:
+                c.sms_send(9199204318, "not !, 2 3 ")
                 # c.sms_send(2524126262, serial[-10:])
             return 0
         else:
@@ -280,8 +279,8 @@ def read_serial():
     elif not serial1 and not serial2 and serial3:  # 3
         serial = serial3
         if serial[-1] is not "!":
-            if c.isconnected():
-                c.sms_send(2524126262, "not !, 3")
+            if c.isconnected() and test:
+                c.sms_send(9199204318, "not !, 3")
                 # c.sms_send(2524126262, serial[-10:])
             return 0
         else:
@@ -291,8 +290,8 @@ def read_serial():
     elif not serial1 and serial2 and not serial3:  # 2
         serial = serial2
         if serial[-1] is not "!":
-            if c.isconnected():
-                c.sms_send(2524126262, "not !, 2")
+            if c.isconnected() and test:
+                c.sms_send(9199204318, "not !, 2")
                 # c.sms_send(2524126262, serial[-10:])
             return 0
         else:
@@ -302,8 +301,8 @@ def read_serial():
     elif serial1 and not serial2 and serial3:  # 3 1
         serial = str(serial1) + str(serial3)
         if serial[-1] is not "!":
-            if c.isconnected():
-                c.sms_send(2524126262, "not !, 1 3")
+            if c.isconnected() and test:
+                c.sms_send(9199204318, "not !, 1 3")
                 # c.sms_send(2524126262, serial[-10:])
             return 0
         else:
@@ -334,13 +333,13 @@ def read_serial():
             send_text_all(serial)
         elif types is 4:  # post to VIPER!!!! accounts for EEPROM Identifier
             if c.isconnected():
-                c.sms_send(2524126262, "Posting")
+                c.sms_send(9199204318, "Posting")
             t = (time.localtime())  # (year, month, day, hour, second, day, yearday)
             t = create_time(t)
             comma = serial.find("<")
             if comma is -1:
                 if c.isconnected():
-                    c.sms_send(2524126262, "No <")
+                    c.sms_send(9199204318, "No <")
                 return 0
             ident = serial[:comma]
             serial = serial[comma + 2:]
@@ -349,34 +348,22 @@ def read_serial():
             """
             When receiving ?, check for texts
             """
+
             if c.isconnected():
                 msg_sms_receive = check_txt()  # check for text
                 # [sms_txt['message'], sms_txt] returns or "", None
-                if len(msg_sms_receive[0]) > 0:
-                    msg = msg_sms_receive[0]
-                else:
-                    msg = None
-                sms = msg_sms_receive[1]
-                if sms:
-                    prev_sender = sms['sender']
-                if msg and sms is not None:
-                    print(msg)  # if true: interface with Teensy and send Teensy C#
-                    # answer = None
-                    # counter = 40
-                    #  c.sms_send(2524126262, "inside")
-                #    prev_msg = msg
-                # if prev_msg:
-                #   print(prev_msg)
-                #   prev_msg = None
-            # c.sms_send(2524126262, "? received")
+                if msg_sms_receive:
+                    if len(msg_sms_receive['message']) > 0:
+                        msg = msg_sms_receive['message']
+                    else:
+                        msg = None
+                    sms_sender = msg_sms_receive['sender']
+                    if sms_sender:
+                        prev_sender = msg_sms_receive['sender']
+                    if msg is not None and sms_sender is not None:
+                        print(msg)  # if true: interface with Teensy and send Teensy C#
     else:
         return 0
-
-
-def send_serial(message):
-    if not deployed:
-        print("sending a message over serial")
-    print(message)  # UART library doesn't work here!
 
 
 # def parse_message(msg):
@@ -476,7 +463,7 @@ def ssend(body, ident, time):
     if c.isconnected():
         if test:
             if c.isconnected():
-                c.sms_send(2524126262, ident)
+                c.sms_send(9199204318, ident)
                 # c.sms_send(2524126262, time)
         if not deployed:
             print("\n Starting Response \n")
@@ -580,13 +567,13 @@ def check_txt():
                 print("Sender is: ", sms_txt['sender'])
             sender = sms_txt['sender']
             valid = check_number(sender)
-        if sms_txt and valid:
-            # if command_read(sms_txt['message']) is "Invalid command":
-            # return ["", sms_txt]
-            # else:
-            return [sms_txt['message'], sms_txt]  # msg, object
+            if valid:
+                # if command_read(sms_txt['message']) is "Invalid command":
+                # return ["", sms_txt]
+                # else:
+                return sms_txt  # msg, object
         else:
-            return ["", sms_txt]  # blank and None
+            return None  # blank and None
 
 
 def create_msg(msg):
@@ -675,7 +662,7 @@ def time_counter(seconds):
     elapsed = 0
     while elapsed < seconds:
         elapsed = time.time() - start
-    #    print('done counting!')
+
     return None
 
 
@@ -692,7 +679,7 @@ def check_number(number):
     boolean
         `True` if number is in allowed list. Otherwise, `False`
     """
-    ok_num = 0
+    ok_num = None
     if number in allowed:
         ok_num = 1
     if not deployed:
@@ -711,38 +698,7 @@ while True:
             ---sleep for 5 seconds
 
            """
-    # sms_sender = ''
-    """
-    if elapsed > 20:
-        elapsed = 0
-        start = time.time()
-        #    print('done counting!')
-        if c.isconnected():
-            msg_sms = check_txt()  # check for text
-            # [sms_txt['message'], sms_txt] returns or "", None
-            if len(msg_sms[0]) > 0:
-                msg = msg_sms[0]
-            else:
-                msg = None
-            sms = msg_sms[1]
-            if sms:
-                prev_sender = sms['sender']
-            if msg and sms is not None:
-                print(msg)  # if true: interface with Teensy and send Teensy C#
-                # answer = None
-                # counter = 40
-                c.sms_send(2524126262, "inside")
-                prev_msg = msg
-                
-                # while answer is None and counter > 0:
-                # answer = sys.stdin.read()
-                # print(msg, end=' ')
-                # utime.sleep_ms(100)
-                # counter = counter - 1
-               
-    else:
-        elapsed = time.time() - start
-         """
+
     if c.isconnected():
         read_serial()
 
