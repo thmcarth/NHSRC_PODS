@@ -227,6 +227,10 @@ void setup() {
   //Serial.print(countdownMS, DEC);
   //Serial.println(" milliseconds!");
   //Serial.println();
+  /*
+   * I Removed the Watchdog Timer from the code because It was only required for hangups with the code.
+   * Watchdog timer is useful if you are concerned with potential code "lockups" in any while loops
+   */
   // SETUP DST
     setTime(myTZ.toUTC(compileTime()));  
 
@@ -234,30 +238,33 @@ void setup() {
   setSyncProvider(getTeensy3Time);
   Serial.print("Initializing SD card...");  //startup SD card
 
-  if (!SD.begin(chipSelect)) {
+  if (!SD.begin(chipSelect)) {//  just tracks whether or not the SD card is activated
     SDcard = false;
     Serial.println("initialization failed!");
   }
   Serial.println("SD Card initialization done.");
-  Serial.print("Code version ");Serial.println(versionNum);
+  Serial.print("Code version ");Serial.println(versionNum);  //print version to console
 
-  pinMode(HPRelay, OUTPUT); //Set up HydraProbe relay
- 
-  //pinMode(levelPin, INPUT);
+  pinMode(HPRelay, OUTPUT); //Set up HydraProbe relay to be OUTPUT (power)
   delay(50);
   
-  pinMode(BattRail_VIN, INPUT);
   digitalWrite(HPRelay, HIGH); //turn on HydraProbe 12V Rail
- // //Watchdog.reset();
-  //setup_parsivel();// Setup Parsivel output string
-  
- /* #if FIRST  //change FIRST to 1 when uploading and running first time
+
+  //FOR FIRST TIME UPLOADS PLEASE USE BLOCK OF CODE BELOW
+ /* 
+  *  This code is just to setup the board for FIRST TIME UPLOADS
+  *  #if FIRST  //change FIRST to 1 when uploading and running first time
   EEPROM.write(eepromfirst_upload, 0);
   is_first = 1;
   #endif
  if (!is_first)
  EEPROM.get(eepromfirst_upload, is_first);
- 
+ */
+
+
+
+//WE WANT THE ISCO TO ALWAYS START IN GRAB SAMPLE (MANUAL) MODE
+ /*
   if(!is_first)
   { // if not fresh upload, take old values
  //EEPROM.get(eepromModeAddr, grabSampleMode); //Get Sampling mode from EEPROM
@@ -273,6 +280,7 @@ void setup() {
 
   
 ////////////////////////// FIRST TIME UPLOAD, GET THE IDENTITY FOR THIS WETBOARD SET AT 1 OR 0
+////////////////////////// IDENTIFIER FOR VIPER UPLOAD PICKUP FROM EEPROM to prevent DATA overlapping in VIPER.  (Sent over in PostData() function)
   int first_up = 0;
 
   if (first_up){
@@ -318,14 +326,8 @@ void setup() {
   moistureSensor3.debugOn(); //Can turn debug on or off to see verbose output (OR NOT)
   moistureSensor3.begin(3);  // green tape
  
-/*
- * 01234567
- * 02134567
- * 03142567
- */
-   
     
-  if (!ina260.begin()) {  // Check to see if  I2c on XBEE is on if there is no comms.  This messed up the INA.
+  if (!ina260.begin()) {  // Check to see if  I2c on XBEE is on if there is no comms.  This prevented the BUS from getting enough power.
     Serial.println("Couldn't find INA260 chip");  
   }
   else{
@@ -343,10 +345,13 @@ void loop() {
 
   
     //Watchdog.reset();
-    checkTexts(); //check for SMS commands
+    //checkTexts(); //check for SMS commands
    delay(1000);
     Serial.print("Droplet reader level (1-3) is ");
     Serial.println(droplet_read());
+
+
+     
   /*if (ISCORail) // this is true at start
   {
     Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
@@ -356,7 +361,7 @@ void loop() {
     iscoTimeout = millis(); //reset timer
     Serial.print("Finished waiting for ISCO...Millis = "); Serial.println(millis());
     do {  //read in data from ISCO Serial
-      //readIscoSerial(0);
+      //readIscoSerial();
     } while (iscoSerial.available() > 0);
   } else
   {
@@ -364,9 +369,10 @@ void loop() {
     delay(5000); //If ISCORail is disabled , wait 5 seconds every loop
   }
   */
-  //Serial.println("Checking texts...");
-  //checkTexts(); //check for SMS commands
-  //Watchdog.reset(); //ensure the system doesn't prematurely reset
+
+
+  
+
   Serial.println("Made it past Texts");
   checkUserInput(); //check Serial for input commands
   getBV(); //get voltage rail readings
@@ -483,32 +489,8 @@ if (currentTime - text_time >  text_period){
 }
 
 
-char* parse_Intensity(String message){
 
-int len = message.length();
-int indx_semi_1 = 0;
-int indx_semi_2 = 0;
-int i = 0;
-int count = 0;
-String mess;
-char* intensity;
-for ( i = 0; i < len; i++)
-    if (message.charAt(i) == ';')
-       count++;
-    if (count == 1)
-      indx_semi_1 = i;
-    if (count == 2){
-      indx_semi_2 = i;
-      i = len;
-    }
- mess = message.substring(indx_semi_1, indx_semi_2);
- int leng = mess.length();
- mess.toCharArray(intensity,leng+1);
- return intensity;
-}
-
-
-void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
+void checkTexts() //reads SMS(s) off the Xbee Buffer (only from valid senders)
 {
   /*
    * Variables to hold message data before sending
@@ -535,14 +517,14 @@ void checkTexts() //reads SMS(s) off the Fona buffer to check for commands
  ind = msg.length();
  rec = true;
  }
- //Serial.print("msg is: " + msg + " length is ");
- //Serial.println(msg.length());
+
+
  if (ind == 0){
   //Serial.println("No valid messages");
   return;
  }
  else {
-  Serial.print("message is ");
+  Serial.print("message is: ");
   Serial.println(msg);
   Serial.print("Length is : ");
   Serial.println(msg.length());
@@ -631,12 +613,12 @@ else if (msg_int == 7){ //change mins to 5
   sendSMS(return_msg);
   rec = true;
 }
-/*
-else if (msg.substring(0,2)=="8_"){
-rec = true;
-  sendSMS("No Parsivel Connected");
-}
 
+else if (msg_int == 8){
+bottle_number = 1;
+  sendSMS("Bottle Count Reset to 1");
+}
+/*
 else if (msg.substring(0,2)=="9_"){
   rec = true;
  sendSMS("No RQ30 Connected");
