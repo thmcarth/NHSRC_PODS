@@ -76,7 +76,6 @@ char bVChar[10];
 ///////////////////////////////////////
 //Static numbers to text when bottles are full and accept SMS comands from:
 
-char* googlePhone = "+19192301472";
 bool successTimText = false; //logic to control when to text bottle full message
 int readSMSSuccess = 0;
 int deleteSMSSuccess = 0;
@@ -343,10 +342,11 @@ void loop() {
 
   
     //Watchdog.reset();
-    checkTexts(); //check for SMS commands
-   delay(1000);
+    //checkTexts(); //check for SMS commands
+  
     Serial.print("Droplet reader level (1-3) is ");
     Serial.println(droplet_read());
+    #if version1
   /*if (ISCORail) // this is true at start
   {
     Serial.print("Started waiting for ISCO...Millis = "); Serial.println(millis()); //If ISCO is enabled, reset the watchdog while waiting for data on ISCO Serial
@@ -364,6 +364,7 @@ void loop() {
     delay(5000); //If ISCORail is disabled , wait 5 seconds every loop
   }
   */
+  #endif
   //Serial.println("Checking texts...");
   //checkTexts(); //check for SMS commands
   //Watchdog.reset(); //ensure the system doesn't prematurely reset
@@ -476,9 +477,9 @@ if (currentTime - text_time >  text_period){
  Serial.println("Here_end_loop");
   
  ////Watchdog.reset();
- if (xbeeSerial.available()){
+ while (xbeeSerial.available()){
  Serial.print("Data sitting on line!-->  ");
- Serial.println(xbeeSerial.readString());
+ Serial.println(xbeeSerial.read());
  }
 }
 
@@ -607,9 +608,9 @@ else if (msg_int == 4/*&& msg.length() == 1*/){
       rec = true;
  }
  
-else if (msg.substring(0,3)=="5_"){  //This command is the one to change the Sample interval of the ISCO
+else if (msg.substring(0,2)=="5_"){  //This command is the one to change the Sample interval of the ISCO //was 0,3 - (4).toInt
    int new_time = 0;
-   new_time = msg.substring(4).toInt();
+   new_time = msg.substring(2).toInt();
    grabSampleInterval = new_time;
    EEPROM.put(eepromIntervalAddr, grabSampleInterval);
    return_msg = "new sampling time is: " + new_time; 
@@ -794,12 +795,12 @@ void Sample()
   bottle_number++;
   for (int i = 0; i<3;i++){
      digitalWrite(IscoSamplePin, HIGH);
-  delay(300);
+  delay(1000); //was 300
   digitalWrite(IscoSamplePin, LOW);
-  delay(100);
+  delay(300); //was 100
   }
   }
-  else {
+  else /* and manual grab sample mode */{
     sendSMS("Out of Bottles.  Stop!");
   }
 }
@@ -1114,7 +1115,7 @@ ident++;
     serialFormat(data);
     //xbeeSerial.print(identS + "," + http.getData() + "!");  //place end character for data integrity.
     Serial.println(http.getData());
-    
+    delay(1000);
     //xbeeSerial.flush();
    // xbeeSerial.println("P"http.getData());  //backup solution
 Serial.println("Done sending to VIPER");
@@ -1191,6 +1192,7 @@ void saveData() {
       myFile.print("TIMESTAMP(EST),BottleNumber (/24),level Reading (0/1),Battery Voltage (V), rain level,Probe1_temp, Probe1_moisture, Probe1_conductivity, Probe1_permitivity,");
       myFile.println("Probe2_temp, Probe2_moisture, Probe2_conductivity, Probe2_permitivity,Probe3_temp, Probe3_moisture, Probe3_conductivity, Probe3_permitivity");
     }
+    //check all data to make sure all VIPER data is being put here also.
     delay(10);
     buildDateTime();
     myFile.print(dateTime);
@@ -1418,7 +1420,7 @@ void I2C_rain(){
       tips = tips/Intensity_period;
       Serial.println(tips);  //Prints out tips to monitor
       inch_tips_total = inch_tips/(counter++);
-      if (counter >= 30)
+      if (counter >= 30) // add fix for rain_period
       counter = 1;
   }
 
