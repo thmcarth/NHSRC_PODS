@@ -78,7 +78,8 @@ void setup()
   attachInterrupt(sensorInterrupt, pulseCounter, FALLING);
   
   File dataFile = SD.open("datalog.txt", FILE_WRITE);
-  dataFile.println("L/min,mL,L,h:m:s,month,day,year"); 
+  dataFile.println("L/min,mL,L,h:m:s,month,day,year");
+  dataFile.close();
 }
 
 
